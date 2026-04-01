@@ -1,0 +1,297 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+/* --- Signup Card Styles --- */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+}
+
+.card {
+  position: relative;
+  background-color: #1c1c1c;
+  padding: 50px 40px;
+  border-radius: 20px;
+  width: 350px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+  transform: translateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.8s ease;
+  opacity: 0;
+}
+
+.card.fade-in {
+  opacity: 1;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+}
+
+.accent-stripe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 6px;
+  background: linear-gradient(180deg, #1E90FF, #00CED1);
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+
+.logo {
+  font-size: 40px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color: #1E90FF;
+  letter-spacing: 2px;
+}
+
+h2 {
+  margin-bottom: 30px;
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+
+.input-field {
+  padding: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: none;
+  background-color: #2c2c2c;
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.input-field:focus {
+  background-color: #3a3a3a;
+  box-shadow: 0 0 10px #1E90FF;
+}
+
+.submit-btn {
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #1E90FF, #4B79A1);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(90deg, #4B79A1, #1E90FF);
+}
+
+.message {
+  margin-top: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.success {
+  color: #00ff99;
+}
+
+.error {
+  color: #ff4c4c;
+}
+
+/* Responsive tweaks */
+@media (max-width: 400px) {
+  .card {
+    width: 90%;
+    padding: 40px 20px;
+  }
+}
+
+
+/* dashboard background */
+.dashboard-container {
+  min-height: 100vh;
+  background: #f4f7fb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* profile card */
+.profile-card {
+  background: white;
+  padding: 40px;
+  width: 420px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.profile-card h1 {
+  margin-bottom: 20px;
+}
+
+.profile-section, .slots-section {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.slot-list {
+  list-style: none;
+  padding: 0;
+}
+
+.slot-item {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
+}
+
+.slot-item.available {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.slot-item.booked {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.dashboard-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+
+  background: linear-gradient(
+      rgba(0,0,0,0.5),
+      rgba(0,0,0,0.5)
+    ),
+    url("/hospital-bg.jpg");
+
+  background-size: cover;
+}
+
+.profile-card {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.doctor-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
+}
+
+.login-option {
+  text-align: center; /* centers the content inside this div */
+  margin-top: 20px;
+}
+
+.login-option p {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+.login-btn {
+  background-color: #28a745; /* Bootstrap-style green */
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #218838; /* slightly darker green on hover */
+}
