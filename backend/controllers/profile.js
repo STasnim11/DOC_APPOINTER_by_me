@@ -10,7 +10,7 @@ exports.getProfile = async (req, res) => {
     connection = await connectDB();
 
     const result = await connection.execute(
-      `SELECT NAME, EMAIL, ROLE FROM USERS WHERE EMAIL = :email`,
+      `SELECT ID, NAME, EMAIL, ROLE FROM USERS WHERE EMAIL = :email`,
       { email }
     );
 
@@ -21,9 +21,10 @@ exports.getProfile = async (req, res) => {
     const user = result.rows[0];
 
     res.status(200).json({
-      name: user[0],
-      email: user[1],
-      role: user[2]
+      id: user[0],
+      name: user[1],
+      email: user[2],
+      role: user[3]
     });
 
   } catch (err) {

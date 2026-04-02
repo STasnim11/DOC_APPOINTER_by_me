@@ -107,8 +107,21 @@ exports.signup = async (req, res) => {
     
     await connection.commit();
     console.log("Transaction committed");
+    
+    // Generate JWT token (same as login)
+    const token = jwt.sign(
+      { 
+        id: userId, 
+        email: email, 
+        role: normalizedRole 
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+    
     res.status(201).json({ 
       message: "✅ User created successfully",
+      token,
       user: { 
         id: userId,
         name, 

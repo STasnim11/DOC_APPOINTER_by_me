@@ -208,7 +208,7 @@
   background: white;
 }
 
-.time-slot:hover {
+.time-slot:hover:not(.booked) {
   border-color: #5f6fff;
   background: #f8f9ff;
   color: #5f6fff;
@@ -218,6 +218,13 @@
   background: #5f6fff;
   border-color: #5f6fff;
   color: white;
+}
+
+.time-slot.booked {
+  background: #e0e0e0;
+  border-color: #ccc;
+  color: #999;
+  cursor: not-allowed;
 }
 
 .no-slots {

@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
-import "../index.css";
-import hospitalImg from "../assets/hospital.jpeg";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/Auth.css";
 
 function Signup() {
   const navigate = useNavigate();
@@ -14,21 +13,16 @@ function Signup() {
   });
 
   const [message, setMessage] = useState("");
-  const [fade, setFade] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState({
     length: false,
     capital: false,
     number: false,
   });
 
-  useEffect(() => {
-    setFade(true);
-  }, []);
-
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // Live password validation
   const checkPassword = (password) => {
     setPasswordStatus({
       length: password.length >= 8,
@@ -59,7 +53,8 @@ function Signup() {
       return;
     }
 
-    setMessage("Signing up...");
+    setLoading(true);
+    setMessage("Creating your account...");
 
     try {
       const response = await fetch("http://localhost:3000/api/signup", {
@@ -75,127 +70,180 @@ function Signup() {
       });
 
       const data = await response.json();
-      console.log("Server response:", data);
 
-if (response.ok) {
-  setMessage("🎉 Signup successful!");
+      if (response.ok) {
+        setMessage("🎉 Signup successful!");
 
-  // save logged user info properly
-  localStorage.setItem("userId", data.user.id);      // <-- save userId returned from backend
-  localStorage.setItem("userEmail", data.user.email); // <-- save email
-  localStorage.setItem("userRole", data.user.role);   // optional, useful for role-based logic
+        const userWithToken = { 
+          ...data.user, 
+          token: data.token 
+        };
+        
+        localStorage.clear();
+        localStorage.setItem("user", JSON.stringify(userWithToken));
+        localStorage.setItem("userId", data.user.id);
+        localStorage.setItem("userEmail", data.user.email);
+        localStorage.setItem("userRole", data.user.role);
 
-  // role-based redirect
-  setTimeout(() => {
-    if (formData.role === "DOCTOR") {
-      navigate("/doctor/setup");
-    } else if (formData.role === "PATIENT") {
-      navigate("/patient/setup");
-    } else if (formData.role === "ADMIN") {
-      navigate("/admin/dashboard");
-    }
-  }, 1000);
-} else {
-        // Show backend error (e.g., email already exists)
+        setTimeout(() => {
+          if (formData.role === "DOCTOR") {
+            navigate("/doctor/license-verification");
+          } else if (formData.role === "PATIENT") {
+            navigate("/patient/setup");
+          } else if (formData.role === "ADMIN") {
+            navigate("/admin/dashboard");
+          }
+        }, 1000);
+      } else {
         setMessage(data.error || "Signup failed ❌");
       }
     } catch (error) {
       console.error("Error:", error);
       setMessage("Server not responding ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container">
-      <div className={`card ${fade ? "fade-in" : ""}`}>
-        <div className="accent-stripe"></div>
-        <div className="logo">⚡ DOC APPOINTER</div>
-        <h2>SIGN UP</h2>
-        <img src={hospitalImg} alt="Hospital" />
-
-        <input
-          type="text"
-          name="name"
-          placeholder="Name"
-          value={formData.name}
-          onChange={handleChange}
-          className="input-field"
-        />
-
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="input-field"
-        />
-
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => {
-            handleChange(e);
-            checkPassword(e.target.value);
-          }}
-          className="input-field"
-        />
-
-        {/* Live password hints */}
-        <div className="password-hints">
-          <p style={{ color: passwordStatus.length ? "green" : "red" }}>
-            {passwordStatus.length ? "✔" : "❌"} At least 8 characters
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-left">
+          <div className="auth-logo">
+            <span className="auth-logo-icon">🏥</span>
+            <span>DOCAPPOINTER</span>
+          </div>
+          <h1 className="auth-title">Join Us Today!</h1>
+          <p className="auth-subtitle">
+            Create your account and start your journey to better healthcare management.
           </p>
-          <p style={{ color: passwordStatus.capital ? "green" : "red" }}>
-            {passwordStatus.capital ? "✔" : "❌"} At least 1 CAPITAL letter
-          </p>
-          <p style={{ color: passwordStatus.number ? "green" : "red" }}>
-            {passwordStatus.number ? "✔" : "❌"} At least 1 number
-          </p>
+          <div className="auth-features">
+            <div className="auth-feature">
+              <div className="auth-feature-icon">⚡</div>
+              <span>Quick and easy registration</span>
+            </div>
+            <div className="auth-feature">
+              <div className="auth-feature-icon">🎯</div>
+              <span>Personalized experience</span>
+            </div>
+            <div className="auth-feature">
+              <div className="auth-feature-icon">💼</div>
+              <span>For patients and doctors</span>
+            </div>
+          </div>
         </div>
 
-        {/* Phone input */}
-        <input
-          type="text"
-          name="phone"
-          placeholder="Phone (11 digits)"
-          value={formData.phone}
-          onChange={handleChange}
-          className="input-field"
-        />
+        <div className="auth-right">
+          <div className="auth-card">
+            <div className="auth-card-header">
+              <h2 className="auth-card-title">Create Account</h2>
+              <p className="auth-card-subtitle">Fill in your details to get started</p>
+            </div>
 
-        <select
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          className="input-field"
-        >
-          <option value="">Select Role</option>
-          <option value="PATIENT">Patient</option>
-          <option value="DOCTOR">Doctor</option>
-          <option value="ADMIN">Admin</option>
-        </select>
+            <div className="auth-form">
+              <div className="auth-input-group">
+                <label className="auth-input-label">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="auth-input"
+                />
+              </div>
 
-        <button className="submit-btn" onClick={handleSubmit}>
-          SIGN UP
-        </button>
+              <div className="auth-input-group">
+                <label className="auth-input-label">Email Address</label>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="your.email@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="auth-input"
+                />
+              </div>
 
-        <p
-          className={`message ${
-            message.includes("successful") || message.includes("✅") ? "success" : "error"
-          }`}
-        >
-          {message}
-        </p>
+              <div className="auth-input-group">
+                <label className="auth-input-label">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Create a strong password"
+                  value={formData.password}
+                  onChange={(e) => {
+                    handleChange(e);
+                    checkPassword(e.target.value);
+                  }}
+                  className="auth-input"
+                />
+              </div>
 
-        {/* Login option */}
-        <div className="login-option">
-          <p>Already have an account?</p>
-          <button className="login-btn" onClick={() => navigate("/login")}>
-            LOGIN
-          </button>
+              {formData.password && (
+                <div className="password-hints">
+                  <p className={`password-hint ${passwordStatus.length ? 'valid' : 'invalid'}`}>
+                    {passwordStatus.length ? "✔" : "❌"} At least 8 characters
+                  </p>
+                  <p className={`password-hint ${passwordStatus.capital ? 'valid' : 'invalid'}`}>
+                    {passwordStatus.capital ? "✔" : "❌"} At least 1 CAPITAL letter
+                  </p>
+                  <p className={`password-hint ${passwordStatus.number ? 'valid' : 'invalid'}`}>
+                    {passwordStatus.number ? "✔" : "❌"} At least 1 number
+                  </p>
+                </div>
+              )}
+
+              <div className="auth-input-group">
+                <label className="auth-input-label">Phone Number</label>
+                <input
+                  type="text"
+                  name="phone"
+                  placeholder="01234567890 (11 digits)"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  maxLength="11"
+                  className="auth-input"
+                />
+              </div>
+
+              <div className="auth-input-group">
+                <label className="auth-input-label">I am a</label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="auth-input"
+                >
+                  <option value="">Select your role</option>
+                  <option value="PATIENT">Patient</option>
+                  <option value="DOCTOR">Doctor</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+              </div>
+
+              <button 
+                className="auth-submit-btn" 
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? "Creating Account..." : "Create Account"}
+              </button>
+
+              {message && (
+                <div className={`auth-message ${message.includes('successful') || message.includes('🎉') ? 'success' : 'error'}`}>
+                  {message}
+                </div>
+              )}
+            </div>
+
+            <div className="auth-footer">
+              Already have an account?{' '}
+              <span className="auth-footer-link" onClick={() => navigate('/login')}>
+                Sign In
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

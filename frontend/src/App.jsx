@@ -7,11 +7,11 @@ import AllDoctors from "./pages/AllDoctors";
 import DoctorProfile from "./pages/DoctorProfile";
 import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
-import DoctorSetup from "./pages/DoctorSetup";
+import DoctorLicenseVerification from "./pages/DoctorLicenseVerification";
 import PatientSetup from "./pages/PatientSetup";
 import AdminDashboard from "./pages/AdminDashboard";
 import SpecializationSetup from "./pages/SpecializationSetup";
-import DoctorTimeSlots from "./pages/DoctorTimeSlots";
+import WritePrescription from "./pages/WritePrescription";
 import MedicineManagement from "./pages/MedicineManagement";
 import LabTestManagement from "./pages/LabTestManagement";
 import BedManagement from "./pages/BedManagement";
@@ -32,13 +32,13 @@ function App() {
 
         {/* DASHBOARDS */}
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
+        <Route path="/doctor/license-verification" element={<DoctorLicenseVerification />} />
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+        <Route path="/doctor/prescription/:appointmentId" element={<WritePrescription />} />
 
-        <Route path="/doctor/setup" element={<DoctorSetup />} />
         <Route path="/patient/setup" element={<PatientSetup />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/doctor/specialization/setup" element={<SpecializationSetup />} />
-        <Route path="/doctor/timeslots" element={<DoctorTimeSlots />} />
         
         {/* Admin Management Routes */}
         <Route path="/admin/medicines" element={<MedicineManagement />} />

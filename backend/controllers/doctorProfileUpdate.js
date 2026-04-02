@@ -296,6 +296,107 @@ exports.updateDoctorProfile = async (req, res) => {
     }
   }
 };
+
+// Update only license number
+exports.updateDoctorLicense = async (req, res) => {
+  const { email, licenseNumber } = req.body;
+  let connection;
+
+  if (!email || !licenseNumber) {
+    return res.status(400).json({
+      error: "❌ Email and license number are required",
+    });
+  }
+
+  // Validate license number format (alphanumeric, 5-20 characters)
+  const trimmedLicense = licenseNumber.trim().toUpperCase();
+  
+  if (trimmedLicense.length < 5 || trimmedLicense.length > 20) {
+    return res.status(400).json({
+      error: "❌ License number must be 5-20 characters long",
+    });
+  }
+  
+  if (!/^[A-Z0-9]+$/.test(trimmedLicense)) {
+    return res.status(400).json({
+      error: "❌ License number can only contain letters and numbers",
+    });
+  }
+
+  try {
+    connection = await connectDB();
+
+    // Check if license already exists for another doctor
+    const licenseCheck = await connection.execute(
+      `SELECT d.ID, u.EMAIL
+       FROM DOCTOR d
+       JOIN USERS u ON d.USER_ID = u.ID
+       WHERE UPPER(TRIM(d.LICENSE_NUMBER)) = :trimmedLicense`,
+      { trimmedLicense }
+    );
+
+    if (licenseCheck.rows.length > 0) {
+      const existingEmail = licenseCheck.rows[0][1];
+      if (existingEmail.toLowerCase() !== email.toLowerCase()) {
+        return res.status(400).json({
+          error: "❌ This license number is already registered to another doctor",
+        });
+      }
+    }
+
+    // Get doctor ID
+    const result = await connection.execute(
+      `SELECT d.ID
+       FROM DOCTOR d
+       JOIN USERS u ON d.USER_ID = u.ID
+       WHERE TRIM(LOWER(u.EMAIL)) = TRIM(LOWER(:email))
+         AND TRIM(UPPER(u.ROLE)) = 'DOCTOR'`,
+      { email }
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "❌ Doctor profile not found",
+      });
+    }
+
+    const doctorId = result.rows[0][0];
+
+    // Update license number
+    await connection.execute(
+      `UPDATE DOCTOR
+       SET LICENSE_NUMBER = :trimmedLicense
+       WHERE ID = :doctorId`,
+      { trimmedLicense, doctorId }
+    );
+
+    await connection.commit();
+
+    return res.status(200).json({
+      message: "✅ License number verified and saved successfully",
+    });
+  } catch (error) {
+    console.error("Update license error:", error);
+
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (_) {}
+    }
+
+    return res.status(500).json({
+      error: "❌ Failed to update license number",
+    });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (closeError) {
+        console.error("Error closing DB connection:", closeError);
+      }
+    }
+  }
+};
 // const connectDB = require("../db/connection");
 
 // exports.updateDoctorProfile = async (req, res) => {

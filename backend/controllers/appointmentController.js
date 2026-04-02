@@ -10,26 +10,32 @@ exports.getAvailableSlots = async (req, res) => {
   const { doctorId } = req.params;
   const { date } = req.query;
 
+  console.log('getAvailableSlots called for doctor:', doctorId, 'date:', date);
+
   if (!date) {
     return res.status(400).json({ error: "❌ Date is required" });
   }
 
   const dayOfWeek = getDayName(date);
+  console.log('Day of week:', dayOfWeek);
 
   let connection;
   try {
     connection = await connectDB();
 
+    // Get ALL time slots for this doctor on this day
     const slotResult = await connection.execute(
-      `SELECT ID, START_TIME, END_TIME, DAY_OF_WEEK
+      `SELECT ID, START_TIME, END_TIME, DAY_OF_WEEK, STATUS
        FROM TIME_SLOTS
        WHERE DOCTOR_ID = :doctorId
          AND DAY_OF_WEEK = :dayOfWeek
-         AND STATUS = 'AVAILABLE'
        ORDER BY START_TIME`,
       { doctorId, dayOfWeek }
     );
 
+    console.log('Found', slotResult.rows.length, 'time slots');
+
+    // Get booked appointments for this date
     const bookedResult = await connection.execute(
       `SELECT TIME_SLOT_ID
        FROM DOCTORS_APPOINTMENTS
@@ -40,17 +46,19 @@ exports.getAvailableSlots = async (req, res) => {
     );
 
     const bookedIds = new Set(bookedResult.rows.map(row => row[0]));
+    console.log('Booked slot IDs:', Array.from(bookedIds));
 
-    const availableSlots = slotResult.rows
-      .map(row => ({
-        timeSlotId: row[0],
-        startTime: row[1],
-        endTime: row[2],
-        dayOfWeek: row[3]
-      }))
-      .filter(slot => !bookedIds.has(slot.timeSlotId));
+    // Return all slots with availability status
+    const slots = slotResult.rows.map(row => ({
+      timeSlotId: row[0],
+      startTime: row[1],
+      endTime: row[2],
+      dayOfWeek: row[3],
+      isAvailable: !bookedIds.has(row[0]) && row[4] === 'AVAILABLE'
+    }));
 
-    return res.status(200).json({ slots: availableSlots });
+    console.log('Returning', slots.length, 'slots');
+    return res.status(200).json({ slots });
   } catch (err) {
     console.error("Get available slots error:", err);
     return res.status(500).json({ error: "❌ Failed to get available slots" });
@@ -152,6 +160,56 @@ exports.bookAppointment = async (req, res) => {
     }
 
     return res.status(500).json({ error: "❌ Failed to book appointment" });
+  } finally {
+    if (connection) await connection.close();
+  }
+};
+
+exports.cancelAppointment = async (req, res) => {
+  const { id } = req.params;
+
+  let connection;
+  try {
+    connection = await connectDB();
+
+    const checkResult = await connection.execute(
+      `SELECT ID, STATUS
+       FROM DOCTORS_APPOINTMENTS
+       WHERE ID = :id`,
+      { id }
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: "❌ Appointment not found" });
+    }
+
+    const currentStatus = checkResult.rows[0][1];
+    if (currentStatus !== 'BOOKED') {
+      return res.status(400).json({ error: "❌ Only booked appointments can be cancelled" });
+    }
+
+    await connection.execute(
+      `UPDATE DOCTORS_APPOINTMENTS
+       SET STATUS = 'CANCELLED'
+       WHERE ID = :id`,
+      { id }
+    );
+
+    await connection.commit();
+
+    return res.status(200).json({
+      message: "✅ Appointment cancelled successfully"
+    });
+  } catch (err) {
+    console.error("Cancel appointment error:", err);
+
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (_) {}
+    }
+
+    return res.status(500).json({ error: "❌ Failed to cancel appointment" });
   } finally {
     if (connection) await connection.close();
   }

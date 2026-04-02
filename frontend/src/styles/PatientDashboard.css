@@ -1,280 +1,446 @@
-/* Patient Dashboard Styles */
-.patient-dashboard {
+.patient-dashboard-new {
   min-height: 100vh;
   background: #f8f9fa;
 }
 
-.patient-header {
+/* Header */
+.dashboard-header {
+  background: white;
+  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 80px;
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
+  gap: 0.5rem;
   cursor: pointer;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2563eb;
 }
 
 .logo-icon {
-  font-size: 28px;
+  font-size: 2rem;
 }
 
-.header-right {
+.profile-dropdown {
+  position: relative;
+}
+
+.profile-icon {
   display: flex;
   align-items: center;
-  gap: 20px;
-}
-
-.user-name {
-  color: #666;
-  font-size: 14px;
-}
-
-.btn-logout {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: 6px;
+  gap: 0.5rem;
   cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-
-.btn-logout:hover {
-  background: #c0392b;
-}
-
-.dashboard-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
-}
-
-.dashboard-content h1 {
-  font-size: 36px;
-  color: #333;
-  margin-bottom: 40px;
-  text-align: center;
-}
-
-.booking-section {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.booking-section h2 {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 20px;
-  font-weight: 600;
-}
-
-.specialty-selector {
-  width: 100%;
-}
-
-.select-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
-  font-size: 16px;
-  background: white;
-  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.select-input:focus {
-  outline: none;
-  border-color: #5f6fff;
-}
-
-.doctors-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.doctor-item {
-  display: flex;
-  gap: 16px;
-  padding: 20px;
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s;
-  background: white;
-}
-
-.doctor-item:hover {
-  border-color: #5f6fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(95, 111, 255, 0.1);
-}
-
-.doctor-item.selected {
-  border-color: #5f6fff;
-  background: #f8f9ff;
-}
-
-.doctor-avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
+.profile-icon:hover {
   background: #f0f0f0;
 }
 
-.doctor-details h3 {
-  font-size: 18px;
-  color: #333;
-  margin: 0 0 6px 0;
+.user-avatar {
+  font-size: 1.5rem;
 }
 
-.doctor-spec {
-  font-size: 14px;
-  color: #5f6fff;
-  margin: 0 0 4px 0;
-}
-
-.doctor-exp {
-  font-size: 13px;
-  color: #666;
-  margin: 0;
-}
-
-.date-input {
-  width: 100%;
-  max-width: 300px;
-  padding: 12px 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-.date-input:focus {
-  outline: none;
-  border-color: #5f6fff;
-}
-
-.slots-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
-}
-
-.slot-item {
-  padding: 12px 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  font-size: 14px;
+.user-name-header {
   font-weight: 500;
-  color: #333;
 }
 
-.slot-item:hover {
-  border-color: #5f6fff;
-  background: #f8f9ff;
+.dropdown-arrow {
+  font-size: 0.8rem;
+  color: #666;
 }
 
-.slot-item.selected {
-  border-color: #5f6fff;
-  background: #5f6fff;
-  color: white;
-}
-
-.btn-book {
-  width: 100%;
-  max-width: 300px;
-  padding: 14px 32px;
-  background: #5f6fff;
-  color: white;
-  border: none;
+.profile-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
   border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 200px;
+  overflow: hidden;
+}
+
+.profile-menu-item {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   cursor: pointer;
-  transition: background 0.3s;
-  display: block;
-  margin: 20px auto 0;
+  transition: background 0.2s;
 }
 
-.btn-book:hover {
-  background: #4a56e0;
+.profile-menu-item:hover {
+  background: #f0f0f0;
 }
 
-.btn-book:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+.profile-menu-item.danger {
+  color: #dc2626;
+}
+
+.profile-menu-item.danger:hover {
+  background: #fee;
+}
+
+/* Dashboard Body */
+.dashboard-body {
+  display: flex;
+  min-height: calc(100vh - 80px);
+}
+
+/* Sidebar */
+.dashboard-sidebar {
+  width: 250px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem 0;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-item {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.sidebar-item:hover {
+  background: #f9fafb;
+  color: #2563eb;
+}
+
+.sidebar-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-right: 3px solid #2563eb;
+}
+
+.sidebar-icon {
+  font-size: 1.25rem;
+}
+
+/* Main Content */
+.dashboard-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+}
+
+.message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.message.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.message.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Appointments View */
+.appointments-view h1 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
 }
 
 .loading {
   text-align: center;
-  padding: 40px;
-  color: #666;
-  font-size: 16px;
+  padding: 2rem;
+  color: #6b7280;
 }
 
 .no-data {
   text-align: center;
-  padding: 40px;
-  color: #999;
-  font-size: 16px;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.message {
-  padding: 12px 20px;
+.no-data p {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.btn-book-new {
+  background: #2563eb;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
   border-radius: 8px;
-  margin-bottom: 20px;
-  text-align: center;
-  font-size: 14px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.2s;
 }
 
-.message.success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+.btn-book-new:hover {
+  background: #1d4ed8;
 }
 
-.message.error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+.appointments-list {
+  display: grid;
+  gap: 1rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .patient-header {
-    padding: 20px 30px;
-  }
+.appointment-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s;
+}
 
-  .dashboard-content {
-    padding: 20px 15px;
-  }
+.appointment-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
-  .dashboard-content h1 {
-    font-size: 28px;
-  }
+.apt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
 
-  .doctors-list {
-    grid-template-columns: 1fr;
-  }
+.apt-header h3 {
+  margin: 0;
+  color: #1f2937;
+}
 
-  .slots-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  }
+.apt-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.apt-status.booked {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.apt-status.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.apt-status.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.apt-details {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.apt-details p {
+  margin: 0;
+  color: #4b5563;
+}
+
+.apt-details strong {
+  color: #1f2937;
+  margin-right: 0.5rem;
+}
+
+.btn-cancel-apt {
+  background: #dc2626;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-cancel-apt:hover {
+  background: #b91c1c;
+}
+
+.btn-cancel-apt:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Profile View */
+.profile-view h1 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.profile-display {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  max-width: 600px;
+}
+
+.profile-avatar-large {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+}
+
+.avatar-icon {
+  font-size: 4rem;
+}
+
+.profile-info {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.info-row {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-row label {
+  font-weight: 600;
+  color: #4b5563;
+  min-width: 100px;
+}
+
+.info-row span {
+  color: #1f2937;
+}
+
+.btn-edit-profile {
+  background: #2563eb;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.btn-edit-profile:hover {
+  background: #1d4ed8;
+}
+
+/* Profile Form */
+.profile-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  max-width: 600px;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-cancel, .btn-save {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-save {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #1d4ed8;
+}
+
+.btn-save:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }

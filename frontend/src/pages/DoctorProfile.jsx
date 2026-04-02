@@ -220,14 +220,18 @@ export default function DoctorProfile() {
           {selectedDate && (
             <div className="time-slots-section">
               {availableSlots.length === 0 ? (
-                <div className="no-slots">No available slots for this date</div>
+                <div className="no-slots">No time slots configured for this date. Doctor needs to set their schedule.</div>
               ) : (
                 <div className="time-slots-grid">
                   {availableSlots.map((slot) => (
                     <div
                       key={slot.timeSlotId}
-                      className={`time-slot ${selectedSlot?.timeSlotId === slot.timeSlotId ? 'selected' : ''}`}
-                      onClick={() => setSelectedSlot(slot)}
+                      className={`time-slot ${
+                        !slot.isAvailable ? 'booked' : 
+                        selectedSlot?.timeSlotId === slot.timeSlotId ? 'selected' : ''
+                      }`}
+                      onClick={() => slot.isAvailable && setSelectedSlot(slot)}
+                      style={{ cursor: slot.isAvailable ? 'pointer' : 'not-allowed' }}
                     >
                       {slot.startTime}
                     </div>

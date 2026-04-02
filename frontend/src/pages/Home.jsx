@@ -21,9 +21,11 @@ const getSpecialtyIcon = (specialty) => {
 export default function Home() {
   const navigate = useNavigate();
   const [specialties, setSpecialties] = useState([]);
+  const [topDoctors, setTopDoctors] = useState([]);
 
   useEffect(() => {
     fetchSpecialties();
+    fetchTopDoctors();
   }, []);
 
   const fetchSpecialties = async () => {
@@ -31,10 +33,32 @@ export default function Home() {
       const res = await fetch('http://localhost:3000/api/specialties');
       if (res.ok) {
         const data = await res.json();
-        setSpecialties(data.specialties || []);
+        // Remove duplicates by name (case-insensitive)
+        const uniqueSpecialties = [];
+        const seen = new Set();
+        for (const spec of data.specialties || []) {
+          const nameLower = spec.name.toLowerCase().trim();
+          if (!seen.has(nameLower)) {
+            seen.add(nameLower);
+            uniqueSpecialties.push(spec);
+          }
+        }
+        setSpecialties(uniqueSpecialties);
       }
     } catch (err) {
       console.error('Error fetching specialties:', err);
+    }
+  };
+
+  const fetchTopDoctors = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/timetable/top-doctors');
+      if (res.ok) {
+        const data = await res.json();
+        setTopDoctors(data.doctors || []);
+      }
+    } catch (err) {
+      console.error('Error fetching top doctors:', err);
     }
   };
 
@@ -108,44 +132,38 @@ export default function Home() {
       {/* Top Doctors */}
       <section className="doctors-section">
         <h2>Top Doctors to Book</h2>
-        <p className="section-subtitle">Simply browse through our extensive list of trusted doctors.</p>
+        <p className="section-subtitle">Doctors with the highest number of appointments.</p>
         
         <div className="doctors-grid">
-          <div className="doctor-card">
-            <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&h=300&fit=crop" alt="Doctor" className="doctor-image" />
-            <div className="doctor-info">
-              <div className="doctor-status">
-                <span className="status-dot"></span>
-                <span>Available</span>
-              </div>
-              <h3>Dr. Richard James</h3>
-              <p className="doctor-specialty">General physician</p>
+          {topDoctors.length === 0 ? (
+            <div className="no-doctors">
+              <p>No doctors available yet.</p>
             </div>
-          </div>
-          
-          <div className="doctor-card">
-            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&h=300&fit=crop" alt="Doctor" className="doctor-image" />
-            <div className="doctor-info">
-              <div className="doctor-status">
-                <span className="status-dot"></span>
-                <span>Available</span>
+          ) : (
+            topDoctors.slice(0, 3).map((doctor) => (
+              <div 
+                key={doctor.id} 
+                className="doctor-card"
+                onClick={() => navigate(`/doctor/${doctor.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                <img 
+                  src={`https://images.unsplash.com/photo-${doctor.id % 2 === 0 ? '1559839734-2b71ea197ec2' : '1612349317150-e413f6a5b16d'}?w=300&h=300&fit=crop`} 
+                  alt={doctor.name} 
+                  className="doctor-image" 
+                />
+                <div className="doctor-info">
+                  <div className="doctor-status">
+                    <span className="status-dot"></span>
+                    <span>Available</span>
+                  </div>
+                  <h3>{doctor.name}</h3>
+                  <p className="doctor-specialty">{doctor.specialty}</p>
+                  <p className="doctor-appointments">{doctor.totalAppointments} appointments</p>
+                </div>
               </div>
-              <h3>Dr. Emily Larson</h3>
-              <p className="doctor-specialty">Gynecologist</p>
-            </div>
-          </div>
-          
-          <div className="doctor-card">
-            <img src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=300&h=300&fit=crop" alt="Doctor" className="doctor-image" />
-            <div className="doctor-info">
-              <div className="doctor-status">
-                <span className="status-dot"></span>
-                <span>Available</span>
-              </div>
-              <h3>Dr. Sarah Patel</h3>
-              <p className="doctor-specialty">Dermatologist</p>
-            </div>
-          </div>
+            ))
+          )}
         </div>
         
         <button className="btn-more" onClick={() => navigate('/all-doctors')}>

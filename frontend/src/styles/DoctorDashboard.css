@@ -1,0 +1,724 @@
+/* License Verification Modal */
+.license-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.license-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.license-modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.license-modal-header h2 {
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.license-modal-header p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.license-form {
+  margin-bottom: 1.5rem;
+}
+
+.license-input-group {
+  margin-bottom: 1.5rem;
+}
+
+.license-input-group label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.license-input {
+  width: 100%;
+  padding: 0.875rem;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.license-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.license-hint {
+  display: block;
+  margin-top: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.license-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.875rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.license-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-license-logout,
+.btn-license-submit {
+  flex: 1;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-license-logout {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-license-logout:hover {
+  background: #e5e7eb;
+}
+
+.btn-license-submit {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-license-submit:hover {
+  background: #1d4ed8;
+}
+
+.btn-license-submit:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.license-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.license-info p {
+  margin: 0.5rem 0;
+  color: #1e40af;
+  font-size: 0.875rem;
+}
+
+.license-info p:first-child {
+  margin-top: 0;
+}
+
+.license-info p:last-child {
+  margin-bottom: 0;
+}
+
+.doctor-dashboard-new {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+/* Header */
+.doctor-header {
+  background: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.doctor-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.doctor-logo-icon {
+  font-size: 2rem;
+}
+
+.doctor-profile-dropdown {
+  position: relative;
+}
+
+.doctor-profile-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.doctor-profile-icon:hover {
+  background: #f0f0f0;
+}
+
+.doctor-user-avatar {
+  font-size: 1.5rem;
+}
+
+.doctor-user-name-header {
+  font-weight: 500;
+}
+
+.doctor-dropdown-arrow {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.doctor-profile-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 200px;
+  overflow: hidden;
+}
+
+.doctor-profile-menu-item {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.doctor-profile-menu-item:hover {
+  background: #f0f0f0;
+}
+
+/* Dashboard Body */
+.doctor-dashboard-body {
+  display: flex;
+  min-height: calc(100vh - 80px);
+}
+
+/* Sidebar */
+.doctor-sidebar {
+  width: 250px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  padding: 2rem 0;
+}
+
+.doctor-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.doctor-sidebar-item {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.doctor-sidebar-item:hover {
+  background: #f9fafb;
+  color: #2563eb;
+}
+
+.doctor-sidebar-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-right: 3px solid #2563eb;
+}
+
+.doctor-sidebar-icon {
+  font-size: 1.25rem;
+}
+
+/* Main Content */
+.doctor-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+}
+
+.doctor-message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.doctor-message.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.doctor-message.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Availability View */
+.availability-view h1 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.availability-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.day-schedule {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s;
+}
+
+.day-schedule.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.day-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.day-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  flex: 1;
+}
+
+.time-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.time-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.time-input-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.time-input-group input,
+.time-input-group select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.time-input-group input:focus,
+.time-input-group select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.time-input-group input:disabled,
+.time-input-group select:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.save-availability-btn {
+  background: #2563eb;
+  color: white;
+  padding: 0.875rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: background 0.2s;
+}
+
+.save-availability-btn:hover {
+  background: #1d4ed8;
+}
+
+.save-availability-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Profile View */
+.doctor-profile-view h1 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.doctor-profile-display {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  max-width: 600px;
+}
+
+.doctor-profile-avatar-large {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem;
+  overflow: hidden;
+}
+
+.doctor-profile-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doctor-avatar-icon {
+  font-size: 4rem;
+}
+
+.doctor-profile-info {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.doctor-info-row {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.doctor-info-row label {
+  font-weight: 600;
+  color: #4b5563;
+  min-width: 150px;
+}
+
+.doctor-info-row span {
+  color: #1f2937;
+}
+
+/* Appointments View */
+.doctor-appointments-view h1 {
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.appointments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.appointments-header h1 {
+  margin: 0;
+}
+
+.today-count-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.today-count-badge strong {
+  font-size: 1.25rem;
+  margin-left: 0.5rem;
+}
+
+.appointments-filters {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.625rem 1.25rem;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.filter-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.doctor-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.doctor-no-data {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.doctor-no-data p {
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.doctor-appointments-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.doctor-appointment-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s;
+}
+
+.doctor-appointment-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.doctor-apt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.doctor-apt-header h3 {
+  margin: 0 0 0.25rem 0;
+  color: #1f2937;
+}
+
+.apt-email {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.doctor-apt-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.doctor-apt-status.booked {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.doctor-apt-status.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.doctor-apt-status.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.doctor-apt-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.doctor-apt-details p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.doctor-apt-details strong {
+  color: #1f2937;
+  margin-right: 0.5rem;
+}
+
+.apt-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-write-prescription {
+  background: #10b981;
+  color: white;
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+  font-size: 0.95rem;
+}
+
+.btn-write-prescription:hover {
+  background: #059669;
+}
+
+.prescription-badge {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .appointments-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .doctor-apt-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Edit Profile View */
+.doctor-edit-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  max-width: 600px;
+}
+
+.edit-section {
+  margin-bottom: 2rem;
+}
+
+.edit-section h3 {
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.btn-update-license {
+  background: #2563eb;
+  color: white;
+  padding: 0.875rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 1rem;
+}
+
+.btn-update-license:hover {
+  background: #1d4ed8;
+}
+
+.btn-update-license:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}

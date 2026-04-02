@@ -148,6 +148,53 @@ exports.getAllDoctors = async (req, res) => {
   }
 };
 
+// Get top doctors by appointment count
+exports.getTopDoctors = async (req, res) => {
+  let connection;
+  try {
+    connection = await connectDB();
+
+    const result = await connection.execute(
+      `SELECT 
+          d.ID as DOCTOR_ID,
+          u.NAME as DOCTOR_NAME,
+          u.EMAIL as DOCTOR_EMAIL,
+          d.DEGREES,
+          d.EXPERIENCE_YEARS,
+          d.FEES,
+          s.NAME as SPECIALTY,
+          COUNT(da.ID) as TOTAL_APPOINTMENTS
+       FROM DOCTOR d
+       JOIN USERS u ON d.USER_ID = u.ID
+       LEFT JOIN DOC_SPECIALIZATION ds ON d.ID = ds.DOCTOR_ID
+       LEFT JOIN SPECIALIZATION s ON ds.SPECIALIZATION_ID = s.ID
+       LEFT JOIN DOCTORS_APPOINTMENTS da ON d.ID = da.DOCTOR_ID
+       WHERE u.ROLE = 'DOCTOR'
+       GROUP BY d.ID, u.NAME, u.EMAIL, d.DEGREES, d.EXPERIENCE_YEARS, d.FEES, s.NAME
+       ORDER BY TOTAL_APPOINTMENTS DESC, u.NAME ASC
+       FETCH FIRST 10 ROWS ONLY`
+    );
+
+    const doctors = result.rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      email: row[2],
+      degrees: row[3],
+      experienceYears: row[4],
+      fees: row[5],
+      specialty: row[6] || 'General',
+      totalAppointments: row[7]
+    }));
+
+    res.status(200).json({ doctors });
+  } catch (err) {
+    console.error('Error fetching top doctors:', err);
+    res.status(500).json({ error: 'Failed to fetch top doctors' });
+  } finally {
+    if (connection) await connection.close();
+  }
+};
+
 // Get single doctor details
 exports.getDoctorById = async (req, res) => {
   const { doctorId } = req.params;
