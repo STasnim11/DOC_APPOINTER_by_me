@@ -8,15 +8,20 @@ export default function AdminDashboard() {
   const [activeView, setActiveView] = useState('view');
   const [showSubSidebar, setShowSubSidebar] = useState(false);
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({});
   const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [searchAdminId, setSearchAdminId] = useState('');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userRole = user.role ? user.role.toUpperCase() : '';
     
+    setCurrentUser(user);
     console.log('User from localStorage:', user);
     console.log('Has token:', !!user.token);
     
@@ -25,6 +30,18 @@ export default function AdminDashboard() {
       navigate('/login');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    // Filter data when search changes
+    if (searchAdminId === '') {
+      setFilteredData(data);
+    } else {
+      const filtered = data.filter(item => 
+        item.adminId && item.adminId.toString().includes(searchAdminId)
+      );
+      setFilteredData(filtered);
+    }
+  }, [searchAdminId, data]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -48,6 +65,7 @@ export default function AdminDashboard() {
     setShowSubSidebar(true);
     setActiveView('view');
     setMessage('');
+    setSearchAdminId('');
     fetchData(module.id);
   };
 
@@ -719,8 +737,8 @@ export default function AdminDashboard() {
       return <div className="loading">Loading...</div>;
     }
 
-    if (data.length === 0) {
-      return <div className="no-data">No records found</div>;
+    if (filteredData.length === 0) {
+      return <div className="no-data">{searchAdminId ? 'No records found for this Admin ID' : 'No records found'}</div>;
     }
 
     switch (selectedModule?.id) {
@@ -730,15 +748,17 @@ export default function AdminDashboard() {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Admin ID</th>
                 <th>Name</th>
                 <th>Description</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
+                  <td>{item.adminId}</td>
                   <td>{item.name}</td>
                   <td>{item.description || 'N/A'}</td>
                   <td>
@@ -757,6 +777,7 @@ export default function AdminDashboard() {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Admin ID</th>
                 <th>Name</th>
                 <th>Address</th>
                 <th>Established Date</th>
@@ -764,9 +785,10 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
+                  <td>{item.adminId}</td>
                   <td>{item.name}</td>
                   <td>{item.address || 'N/A'}</td>
                   <td>{item.establishedDate ? new Date(item.establishedDate).toLocaleDateString() : 'N/A'}</td>
@@ -786,6 +808,7 @@ export default function AdminDashboard() {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Admin ID</th>
                 <th>Branch Name</th>
                 <th>Contact Number</th>
                 <th>Type</th>
@@ -793,9 +816,10 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
+                  <td>{item.adminId}</td>
                   <td>{item.branchName || 'N/A'}</td>
                   <td>{item.contactNo}</td>
                   <td>{item.type}</td>
@@ -815,6 +839,7 @@ export default function AdminDashboard() {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Admin ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Phone</th>
@@ -825,9 +850,10 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
+                  <td>{item.adminId}</td>
                   <td>{item.name || 'N/A'}</td>
                   <td>{item.email || 'N/A'}</td>
                   <td>{item.phone || 'N/A'}</td>
@@ -850,6 +876,7 @@ export default function AdminDashboard() {
             <thead>
               <tr>
                 <th>ID</th>
+                <th>Admin ID</th>
                 <th>Bed Number</th>
                 <th>Ward Name</th>
                 <th>Bed Type</th>

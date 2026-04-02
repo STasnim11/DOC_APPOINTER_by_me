@@ -41,6 +41,155 @@ const generateAppointmentSlots = (startTime, endTime, intervalMinutes = 25) => {
   return slots;
 };
 
+// Get doctors by specialty
+exports.getDoctorsBySpecialty = async (req, res) => {
+  const { specialty } = req.query;
+
+  if (!specialty) {
+    return res.status(400).json({ error: "Specialty is required" });
+  }
+
+  let connection;
+  try {
+    connection = await connectDB();
+
+    const result = await connection.execute(
+      `SELECT d.ID, u.NAME, u.EMAIL, s.NAME as SPECIALIZATION_NAME, d.EXPERIENCE_YEARS, d.DEGREES
+       FROM DOCTOR d
+       JOIN USERS u ON d.USER_ID = u.ID
+       JOIN DOC_SPECIALIZATION ds ON d.ID = ds.DOCTOR_ID
+       JOIN SPECIALIZATION s ON ds.SPECIALIZATION_ID = s.ID
+       WHERE UPPER(s.NAME) = UPPER(:specialty)
+       ORDER BY d.EXPERIENCE_YEARS DESC`,
+      { specialty }
+    );
+
+    const doctors = result.rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      email: row[2],
+      specialty: row[3],
+      experienceYears: row[4],
+      degrees: row[5]
+    }));
+
+    res.status(200).json({ doctors });
+  } catch (err) {
+    console.error('Error fetching doctors by specialty:', err);
+    res.status(500).json({ error: 'Failed to fetch doctors' });
+  } finally {
+    if (connection) await connection.close();
+  }
+};
+
+// Get all specialties
+exports.getAllSpecialties = async (req, res) => {
+  console.log('getAllSpecialties called');
+  let connection;
+  try {
+    connection = await connectDB();
+    console.log('Database connected for specialties');
+
+    const result = await connection.execute(
+      `SELECT ID, NAME, DESCRIPTION
+       FROM SPECIALIZATION
+       ORDER BY NAME`
+    );
+
+    console.log('Query executed, rows:', result.rows.length);
+
+    const specialties = result.rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      description: row[2]
+    }));
+
+    console.log('Specialties:', specialties);
+    res.status(200).json({ specialties });
+  } catch (err) {
+    console.error('Error fetching specialties:', err);
+    console.error('Error stack:', err.stack);
+    res.status(500).json({ error: 'Failed to fetch specialties' });
+  } finally {
+    if (connection) await connection.close();
+  }
+};
+
+// Get all doctors
+exports.getAllDoctors = async (req, res) => {
+  let connection;
+  try {
+    connection = await connectDB();
+
+    const result = await connection.execute(
+      `SELECT DISTINCT d.ID, u.NAME, u.EMAIL, s.NAME as SPECIALIZATION_NAME, d.EXPERIENCE_YEARS, d.DEGREES
+       FROM DOCTOR d
+       JOIN USERS u ON d.USER_ID = u.ID
+       LEFT JOIN DOC_SPECIALIZATION ds ON d.ID = ds.DOCTOR_ID
+       LEFT JOIN SPECIALIZATION s ON ds.SPECIALIZATION_ID = s.ID
+       ORDER BY d.EXPERIENCE_YEARS DESC`
+    );
+
+    const doctors = result.rows.map(row => ({
+      id: row[0],
+      name: row[1],
+      email: row[2],
+      specialty: row[3] || 'General',
+      experienceYears: row[4],
+      degrees: row[5]
+    }));
+
+    res.status(200).json({ doctors });
+  } catch (err) {
+    console.error('Error fetching all doctors:', err);
+    res.status(500).json({ error: 'Failed to fetch doctors' });
+  } finally {
+    if (connection) await connection.close();
+  }
+};
+
+// Get single doctor details
+exports.getDoctorById = async (req, res) => {
+  const { doctorId } = req.params;
+
+  let connection;
+  try {
+    connection = await connectDB();
+
+    const result = await connection.execute(
+      `SELECT d.ID, u.NAME, u.EMAIL, s.NAME as SPECIALIZATION_NAME, d.EXPERIENCE_YEARS, d.DEGREES
+       FROM DOCTOR d
+       JOIN USERS u ON d.USER_ID = u.ID
+       LEFT JOIN DOC_SPECIALIZATION ds ON d.ID = ds.DOCTOR_ID
+       LEFT JOIN SPECIALIZATION s ON ds.SPECIALIZATION_ID = s.ID
+       WHERE d.ID = :doctorId`,
+      { doctorId }
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+
+    const row = result.rows[0];
+    const doctor = {
+      id: row[0],
+      name: row[1],
+      email: row[2],
+      specialty: row[3] || 'General',
+      experienceYears: row[4],
+      degrees: row[5],
+      fee: 50
+    };
+
+    res.status(200).json({ doctor });
+  } catch (err) {
+    console.error('Error fetching doctor details:', err);
+    res.status(500).json({ error: 'Failed to fetch doctor details' });
+  } finally {
+    if (connection) await connection.close();
+  }
+};
+
 exports.saveDoctorSchedule = async (req, res) => {
   const { email, schedule } = req.body;
 

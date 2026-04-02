@@ -2,7 +2,10 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import PatientDashboard from "./pages/Profile";
+import Home from "./pages/Home";
+import AllDoctors from "./pages/AllDoctors";
+import DoctorProfile from "./pages/DoctorProfile";
+import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorSetup from "./pages/DoctorSetup";
 import PatientSetup from "./pages/PatientSetup";
@@ -20,6 +23,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/all-doctors" element={<AllDoctors />} />
+        <Route path="/doctor/:doctorId" element={<DoctorProfile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/clear" element={<ClearStorage />} />
@@ -41,7 +47,7 @@ function App() {
         <Route path="/admin/database-features" element={<DatabaseFeatures />} />
         
         {/* DEFAULT */}
-        <Route path="*" element={<Signup />} />
+        <Route path="*" element={<Home />} />
       </Routes>
     </Router>
   );

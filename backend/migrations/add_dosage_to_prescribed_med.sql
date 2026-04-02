@@ -9,4 +9,4 @@ ALTER TABLE PRESCRIBED_MED ADD (
 
 -- Add comments for documentation
 COMMENT ON COLUMN PRESCRIBED_MED.DOSAGE IS 'Dosage instructions for this specific prescription (e.g., "1 tablet twice daily")';
-COMMENT ON COLUMN PRESCRIBED_MED.DURATION IS 'Duration for this specific prescription (e.g., "7 days", "2 weeks")';
+COMMENT ON COLUMN PRESCRIBED_MED.DURATION IS 'Durdont touation for this specific prescription (e.g., "7 days", "2 weeks")';
