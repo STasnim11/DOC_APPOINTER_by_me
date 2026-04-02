@@ -10,4 +10,7 @@ async function connectDB() {
   return await oracledb.getConnection(dbConfig);
 }
 
+// Export both the connection function and oracledb for BIND_OUT operations
+connectDB.oracledb = oracledb;
+
 module.exports = connectDB;

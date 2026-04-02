@@ -1,6 +1,10 @@
 console.log("authController.js file loaded!");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const connectDB = require("../db/connection");
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_EXPIRES_IN = '24h';
 
 const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,13 +51,13 @@ exports.signup = async (req, res) => {
     console.log(" Connected to database");
 
     const duplicateCheck = await connection.execute(
-      'SELECT NAME, EMAIL FROM USERS WHERE NAME = :name AND EMAIL = :email',
-      { name, email }
+      'SELECT EMAIL FROM USERS WHERE EMAIL = :email',
+      { email }
     );
 
     if (duplicateCheck.rows.length > 0) {
       return res.status(409).json({ 
-        error: "❌ User with this name and email already exists" 
+        error: "❌ User with this email already exists" 
       });
     }
 
@@ -77,6 +81,7 @@ exports.signup = async (req, res) => {
     );
     const userId = userResult.rows[0][0];
     console.log("Fetched USER_ID:", userId);
+    
     if (normalizedRole === "DOCTOR") {
       await connection.execute(
         `INSERT INTO DOCTOR (USER_ID)
@@ -91,7 +96,15 @@ exports.signup = async (req, res) => {
         { userId }
       );
       console.log("Inserted into PATIENT");
+    } else if (normalizedRole === "ADMIN") {
+      await connection.execute(
+        `INSERT INTO ADMIN (USERS_ID, ROLE)
+         VALUES (:userId, 'SUPER_ADMIN')`,
+        { userId }
+      );
+      console.log("Inserted into ADMIN");
     }
+    
     await connection.commit();
     console.log("Transaction committed");
     res.status(201).json({ 
@@ -117,13 +130,89 @@ exports.signup = async (req, res) => {
     }
     if (err.message.includes("UNIQUE constraint") || err.message.includes("ORA-00001")) {
       return res.status(409).json({ 
-        error: "❌ User with this name and email combination already exists" 
+        error: "❌ User with this email already exists" 
       });
     }
     res.status(500).json({ error: "❌ Signup failed. Please try again." });
   }finally{
     if(connection)
     {
+      await connection.close();
+      console.log("Database connection closed");
+    }
+  }
+};
+
+
+// Login endpoint with JWT
+exports.login = async (req, res) => {
+  const { email, pass } = req.body;
+  console.log("Login request received:", { email });
+
+  if (!email || !pass) {
+    return res.status(400).json({ error: "❌ Email and password are required" });
+  }
+
+  let connection;
+  try {
+    connection = await connectDB();
+    console.log("Connected to database");
+
+    // Fetch user from database
+    const result = await connection.execute(
+      `SELECT ID, NAME, EMAIL, PASS, PHONE, ROLE FROM USERS WHERE EMAIL = :email`,
+      { email }
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "❌ Invalid email or password" });
+    }
+
+    const user = {
+      id: result.rows[0][0],
+      name: result.rows[0][1],
+      email: result.rows[0][2],
+      pass: result.rows[0][3],
+      phone: result.rows[0][4],
+      role: result.rows[0][5]
+    };
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(pass, user.pass);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "❌ Invalid email or password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role 
+      },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    console.log("✅ Login successful for:", email);
+
+    res.status(200).json({
+      message: "✅ Login successful",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "❌ Login failed. Please try again." });
+  } finally {
+    if (connection) {
       await connection.close();
       console.log("Database connection closed");
     }

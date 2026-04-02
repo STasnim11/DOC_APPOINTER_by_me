@@ -29,19 +29,31 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMessage(data.message || "Login failed");
+        setMessage(data.error || data.message || "Login failed");
         setLoading(false);
         return;
       }
 
+      console.log('Login response:', data);
+      console.log('Token from response:', data.token);
+      console.log('User from response:', data.user);
+
       const { role } = data.user;
 
-      // 2️⃣ Save essential info in localStorage
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // 2️⃣ Clear old storage first
+      localStorage.clear();
+
+      // 3️⃣ Save essential info in localStorage (including token)
+      const userWithToken = { ...data.user, token: data.token };
+      localStorage.setItem("user", JSON.stringify(userWithToken));
       localStorage.setItem("userEmail", data.user.email);
       localStorage.setItem("userRole", role);
 
-      // 3️⃣ Redirect based on role (case-insensitive)
+      console.log('Stored user:', userWithToken);
+      console.log('Token stored:', !!data.token);
+      console.log('Full localStorage user:', localStorage.getItem('user'));
+
+      // 4️⃣ Redirect based on role (case-insensitive)
       const userRole = role.toUpperCase();
       
       if (userRole === "DOCTOR") {
@@ -89,6 +101,26 @@ export default function Login() {
       </button>
 
       {message && <p className="message">{message}</p>}
+      
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <button
+          onClick={() => {
+            localStorage.clear();
+            alert('Storage cleared! Now login again.');
+          }}
+          style={{
+            background: '#f39c12',
+            color: 'white',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '12px'
+          }}
+        >
+          Clear Storage & Retry
+        </button>
+      </div>
     </AuthLayout>
   );
 }

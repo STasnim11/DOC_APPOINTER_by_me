@@ -8,7 +8,7 @@ export default function PatientDashboard() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
 
     if (!loggedInUser) {
       setMessage("No user logged in!");
@@ -73,7 +73,9 @@ const fetchAppointments = async () => {
         <button
           className="submit-btn"
           onClick={() => {
-            localStorage.removeItem("loggedInUser");
+            localStorage.removeItem("user");
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("userRole");
             window.location.href = "/login";
           }}
         >

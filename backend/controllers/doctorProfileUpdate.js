@@ -29,9 +29,8 @@ exports.getDoctorProfile = async (req, res) => {
 
     // Get doctor details
     const doctorResult = await connection.execute(
-      `SELECT d.ID, d.LICENSE_NUMBER, s.NAME as SPECIALIZATION
+      `SELECT d.ID, d.LICENSE_NUMBER
        FROM DOCTOR d
-       LEFT JOIN SPECIALIZATION s ON d.SPECIALIZATION_ID = s.ID
        WHERE d.USER_ID = :userId`,
       { userId }
     );
@@ -43,7 +42,19 @@ exports.getDoctorProfile = async (req, res) => {
     if (doctorResult.rows.length > 0) {
       doctorId = doctorResult.rows[0][0];
       license = doctorResult.rows[0][1] || "Not provided";
-      specialization = doctorResult.rows[0][2] || "Not provided";
+      
+      // Get specialization from DOC_SPECIALIZATION table
+      const specResult = await connection.execute(
+        `SELECT s.NAME
+         FROM DOC_SPECIALIZATION ds
+         JOIN SPECIALIZATION s ON ds.SPECIALIZATION_ID = s.ID
+         WHERE ds.DOCTOR_ID = :doctorId`,
+        { doctorId }
+      );
+      
+      if (specResult.rows.length > 0) {
+        specialization = specResult.rows[0][0] || "Not provided";
+      }
     }
 
     // Get availability (from DOCTOR_SCHEDULE table if exists)
