@@ -63,7 +63,7 @@ exports.getPatientAppointmentsByEmail = async (req, res) => {
           du.NAME,
           du.EMAIL
        FROM DOCTORS_APPOINTMENTS da
-       JOIN TIME_SLOTS ts
+       LEFT JOIN TIME_SLOTS ts
          ON da.TIME_SLOT_ID = ts.ID
        JOIN DOCTOR d
          ON da.DOCTOR_ID = d.ID

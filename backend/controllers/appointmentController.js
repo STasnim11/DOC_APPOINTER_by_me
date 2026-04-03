@@ -3,7 +3,7 @@ const connectDB = require("../db/connection");
 const getDayName = (dateString) => {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const date = new Date(dateString);
-  return days[date.getDay()];
+  return days[date.getUTCDay()];
 };
 
 exports.getAvailableSlots = async (req, res) => {

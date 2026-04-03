@@ -22,9 +22,14 @@ const connectDB = require('../db/connection');
  * }
  */
 exports.createPrescription = async (req, res) => {
+  console.log('🚀 ========== CREATE PRESCRIPTION CALLED ==========');
+  console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
+  
   let connection;
   
   try {
+    console.log('📝 Creating prescription - Request body:', JSON.stringify(req.body, null, 2));
+    
     const {
       appointmentId,
       chiefComplaints,
@@ -37,43 +42,57 @@ exports.createPrescription = async (req, res) => {
       medicines = []
     } = req.body;
 
+    console.log('📋 Extracted data:', { appointmentId, medicinesCount: medicines.length });
+
     // Validate required fields
     if (!appointmentId) {
+      console.log('❌ Validation failed: appointmentId missing');
       return res.status(400).json({
         success: false,
         message: 'Appointment ID is required'
       });
     }
 
+    console.log('🔌 Connecting to database...');
     connection = await connectDB();
+    console.log('✅ Database connected');
 
     // Check if appointment exists
+    console.log('🔍 Checking if appointment exists:', appointmentId);
     const appointmentCheck = await connection.execute(
       `SELECT ID FROM DOCTORS_APPOINTMENTS WHERE ID = :appointmentId`,
       { appointmentId }
     );
 
     if (appointmentCheck.rows.length === 0) {
+      console.log('❌ Appointment not found:', appointmentId);
       return res.status(404).json({
         success: false,
         message: 'Appointment not found'
       });
     }
+    console.log('✅ Appointment exists');
 
     // Check if prescription already exists for this appointment
+    console.log('🔍 Checking for existing prescription...');
     const existingPrescription = await connection.execute(
       `SELECT ID FROM PRESCRIPTION WHERE APPOINTMENT_ID = :appointmentId`,
       { appointmentId }
     );
 
     if (existingPrescription.rows.length > 0) {
+      console.log('❌ Prescription already exists for appointment:', appointmentId);
       return res.status(400).json({
         success: false,
         message: 'Prescription already exists for this appointment'
       });
     }
+    console.log('✅ No existing prescription');
 
     // Insert prescription
+    console.log('💾 Inserting prescription...');
+    console.log('📅 visitAgainAt:', visitAgainAt);
+    
     const prescriptionResult = await connection.execute(
       `INSERT INTO PRESCRIPTION (
         APPOINTMENT_ID,
@@ -94,7 +113,7 @@ exports.createPrescription = async (req, res) => {
         :diagnosis,
         :history,
         :instructions,
-        :visitAgainAt
+        CASE WHEN :visitAgainAt IS NOT NULL THEN TO_DATE(:visitAgainAt, 'YYYY-MM-DD') ELSE NULL END
       ) RETURNING ID INTO :prescriptionId`,
       {
         appointmentId,
@@ -110,52 +129,73 @@ exports.createPrescription = async (req, res) => {
     );
 
     const prescriptionId = prescriptionResult.outBinds.prescriptionId[0];
+    console.log('✅ Prescription inserted with ID:', prescriptionId);
 
     // Insert prescribed medicines if provided
     if (medicines && medicines.length > 0) {
+      console.log('💊 Processing medicines:', medicines.length);
       for (const medicine of medicines) {
         const { medicineName, dosage, duration } = medicine;
 
         if (!medicineName) {
-          continue; // Skip empty entries
+          console.log('⚠️ Skipping empty medicine entry');
+          continue;
         }
 
-        // Insert medicine name directly into PRESCRIBED_MED with dosage and duration
-        // No validation - accept any medicine name
+        console.log('🔍 Looking up medicine:', medicineName);
+        // Look up medicine ID by name
+        const medicineCheck = await connection.execute(
+          `SELECT id FROM medicines WHERE UPPER(name) = UPPER(:medicineName)`,
+          { medicineName: medicineName.trim() }
+        );
+
+        if (medicineCheck.rows.length === 0) {
+          console.warn(`❌ Medicine "${medicineName}" not found in database, skipping`);
+          continue;
+        }
+
+        const medicineId = medicineCheck.rows[0][0];
+        console.log(`✅ Found medicine ID: ${medicineId} for "${medicineName}"`);
+
+        console.log('💾 Inserting into PRESCRIBED_MED...');
         await connection.execute(
-          `INSERT INTO PRESCRIBED_MED (
-            PRESCRIPTION_ID,
-            MEDICATION_ID,
-            DOSAGE,
-            DURATION
-          ) VALUES (
-            :prescriptionId,
-            :medicineName,
-            :dosage,
-            :duration
-          )`,
+          `INSERT INTO PRESCRIBED_MED (PRESCRIPTION_ID, MEDICATION_ID, DOSAGE, DURATION)
+           VALUES (:prescriptionId, :medicineId, :dosage, :duration)`,
           {
             prescriptionId,
-            medicineName: medicineName.trim(),
+            medicineId,
             dosage: dosage || null,
             duration: duration || null
           }
         );
+        console.log(`✅ Medicine inserted: ${medicineName}`);
       }
+    } else {
+      console.log('⚠️ No medicines to insert');
     }
 
+    console.log('💾 Committing transaction...');
     await connection.commit();
+    console.log('✅ Transaction committed successfully');
 
     res.status(201).json({
       success: true,
       message: 'Prescription created successfully',
       prescriptionId
     });
+    console.log('✅ Response sent to client');
 
   } catch (error) {
-    console.error('Error creating prescription:', error);
+    console.error('❌ ERROR creating prescription:', error);
+    console.error('❌ Error message:', error.message);
+    console.error('❌ Error stack:', error.stack);
     if (connection) {
-      await connection.rollback();
+      try {
+        await connection.rollback();
+        console.log('🔄 Transaction rolled back');
+      } catch (rollbackError) {
+        console.error('❌ Rollback error:', rollbackError);
+      }
     }
     res.status(500).json({
       success: false,
@@ -448,7 +488,7 @@ exports.updatePrescription = async (req, res) => {
         DIAGNOSIS = :diagnosis,
         HISTORY = :history,
         INSTRUCTIONS = :instructions,
-        VISIT_AGAIN_AT = :visitAgainAt
+        VISIT_AGAIN_AT = TO_DATE(:visitAgainAt, 'YYYY-MM-DD')    
       WHERE ID = :id`,
       {
         id,

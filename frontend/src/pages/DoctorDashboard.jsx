@@ -15,8 +15,19 @@ export default function DoctorDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [todayCount, setTodayCount] = useState(0);
   const [filter, setFilter] = useState('all'); // all, upcoming, completed, cancelled
-  const [licenseNumber, setLicenseNumber] = useState('');
-  const [licenseError, setLicenseError] = useState('');
+  const [specializations, setSpecializations] = useState([]);
+  const [scheduleLoaded, setScheduleLoaded] = useState(false);
+  
+  // Edit profile form state
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    gender: '',
+    degrees: '',
+    experienceYears: '',
+    fees: '',
+    specializationId: ''
+  });
   
   const [schedule, setSchedule] = useState({
     Sunday: { selected: false, startTime: '09:00', endTime: '17:00', interval: 30 },
@@ -38,22 +49,76 @@ export default function DoctorDashboard() {
     fetchDoctorProfile(userData.email);
     fetchAppointments(userData.email);
     fetchTodayCount(userData.email);
+    fetchSpecializations();
+    fetchDoctorSchedule(userData.email);
   }, [navigate]);
+
+  const fetchDoctorSchedule = async (email) => {
+    try {
+      console.log('🔍 Fetching doctor schedule for:', email);
+      const res = await fetch(`http://localhost:3000/api/doctor/schedule/${email}`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log('✅ Schedule data received:', data);
+        if (data.schedule) {
+          setSchedule(data.schedule);
+          setScheduleLoaded(true);
+        }
+      } else {
+        console.log('⚠️ No existing schedule found, using defaults');
+        setScheduleLoaded(false);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching doctor schedule:', err);
+      setScheduleLoaded(false);
+    }
+  };
 
   const fetchDoctorProfile = async (email) => {
     try {
+      console.log('Fetching doctor profile for:', email);
       const res = await fetch(`http://localhost:3000/api/doctor/profile/${email}`);
       if (res.ok) {
         const data = await res.json();
+        console.log('Doctor profile data received:', data);
+        console.log('License value:', data.license);
         setDoctorProfile(data);
+        
+        // Populate edit form with current data
+        setEditForm({
+          name: data.name || '',
+          phone: data.phone || '',
+          gender: data.gender || '',
+          degrees: data.degrees || '',
+          experienceYears: data.experienceYears || '',
+          fees: data.fees || '',
+          specializationId: data.specializationId || ''
+        });
         
         // Check if license exists - redirect to verification if not
         if (!data.license || data.license === 'Not provided') {
+          console.log('No license found, redirecting to verification');
           navigate('/doctor/license-verification');
+        } else {
+          console.log('License found:', data.license);
         }
+      } else {
+        console.error('Failed to fetch profile, status:', res.status);
       }
     } catch (err) {
       console.error('Error fetching doctor profile:', err);
+    }
+  };
+
+  const fetchSpecializations = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/specialties');
+      if (res.ok) {
+        const data = await res.json();
+        setSpecializations(data);
+      }
+    } catch (err) {
+      console.error('Error fetching specializations:', err);
     }
   };
 
@@ -99,8 +164,9 @@ export default function DoctorDashboard() {
     setMessage('');
 
     try {
-      const res = await fetch('http://localhost:3000/api/doctor/setup-schedule', {
-        method: 'POST',
+      // Use PUT for update (since we're replacing existing schedule)
+      const res = await fetch('http://localhost:3000/api/doctor/update-schedule', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
@@ -114,6 +180,8 @@ export default function DoctorDashboard() {
 
       if (res.ok) {
         setMessage('✅ ' + result.message);
+        // Refresh schedule from database
+        await fetchDoctorSchedule(user.email);
         setTimeout(() => setMessage(''), 5000);
       } else {
         setMessage('❌ ' + (result.error || 'Failed to save availability'));
@@ -297,7 +365,52 @@ export default function DoctorDashboard() {
           {/* Availability View */}
           {activeView === 'availability' && (
             <div className="availability-view">
-              <h1>Availability Schedule</h1>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h1>Availability Schedule</h1>
+                <button 
+                  onClick={() => fetchDoctorSchedule(user.email)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  🔄 Refresh
+                </button>
+              </div>
+              
+              {scheduleLoaded && (
+                <div style={{
+                  padding: '0.75rem 1rem',
+                  background: '#d1fae5',
+                  border: '1px solid #10b981',
+                  borderRadius: '6px',
+                  marginBottom: '1rem',
+                  color: '#065f46',
+                  fontSize: '0.9rem'
+                }}>
+                  ✅ Showing your current availability schedule from database
+                </div>
+              )}
+              
+              {!scheduleLoaded && (
+                <div style={{
+                  padding: '0.75rem 1rem',
+                  background: '#fef3c7',
+                  border: '1px solid #f59e0b',
+                  borderRadius: '6px',
+                  marginBottom: '1rem',
+                  color: '#92400e',
+                  fontSize: '0.9rem'
+                }}>
+                  ℹ️ No schedule found. Set your availability below and click Save.
+                </div>
+              )}
+              
               <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
                 Set your working hours for each day. Appointment slots will be generated based on your interval.
               </p>
@@ -386,20 +499,30 @@ export default function DoctorDashboard() {
                     <span>{doctorProfile.phone || user?.phone || 'Not provided'}</span>
                   </div>
                   <div className="doctor-info-row">
-                    <label>Specialization:</label>
-                    <span>{doctorProfile.specialization || 'Not provided'}</span>
+                    <label>Gender:</label>
+                    <span>{doctorProfile.gender || 'Not provided'}</span>
                   </div>
                   <div className="doctor-info-row">
-                    <label>Experience:</label>
-                    <span>{doctorProfile.experienceYears ? `${doctorProfile.experienceYears} years` : 'Not provided'}</span>
+                    <label>License Number:</label>
+                    <span style={{ fontFamily: 'Courier New, monospace', letterSpacing: '1px', fontWeight: '600', color: '#2563eb' }}>
+                      {doctorProfile.license && doctorProfile.license !== 'Not provided' ? doctorProfile.license : 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="doctor-info-row">
+                    <label>Specialization:</label>
+                    <span>{doctorProfile.specialization || 'Not provided'}</span>
                   </div>
                   <div className="doctor-info-row">
                     <label>Degrees:</label>
                     <span>{doctorProfile.degrees || 'Not provided'}</span>
                   </div>
                   <div className="doctor-info-row">
-                    <label>License:</label>
-                    <span>{doctorProfile.license || 'Not provided'}</span>
+                    <label>Experience:</label>
+                    <span>{doctorProfile.experienceYears ? `${doctorProfile.experienceYears} years` : 'Not provided'}</span>
+                  </div>
+                  <div className="doctor-info-row">
+                    <label>Consultation Fee:</label>
+                    <span>{doctorProfile.fees ? `৳${doctorProfile.fees}` : 'Not set'}</span>
                   </div>
                 </div>
               </div>
@@ -413,87 +536,225 @@ export default function DoctorDashboard() {
               
               <div className="doctor-edit-form">
                 <div className="edit-section">
-                  <h3>Update License Number</h3>
-                  <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-                    Current License: <strong>{doctorProfile.license || 'Not provided'}</strong>
+                  <h3>Update Profile Information</h3>
+                  <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+                    Update your professional details and qualifications
                   </p>
                   
-                  <div className="license-input-group">
-                    <label>New License Number</label>
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Full Name</label>
                     <input
                       type="text"
-                      value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value.toUpperCase())}
-                      placeholder="Enter new license number (e.g., MD12345)"
-                      maxLength="20"
-                      className="license-input"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                      placeholder="Enter your full name"
+                      className="auth-input"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
                     />
-                    <small className="license-hint">
-                      5-20 alphanumeric characters (letters and numbers only)
-                    </small>
                   </div>
 
-                  {licenseError && (
-                    <div className="license-error">
-                      {licenseError}
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Phone Number</label>
+                    <input
+                      type="text"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                      placeholder="Enter phone number"
+                      maxLength="11"
+                      className="auth-input"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
+                    />
+                  </div>
+
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Gender</label>
+                    <select
+                      value={editForm.gender}
+                      onChange={(e) => setEditForm({...editForm, gender: e.target.value})}
+                      className="auth-input"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Specialization</label>
+                    <select
+                      value={editForm.specializationId}
+                      onChange={(e) => setEditForm({...editForm, specializationId: e.target.value})}
+                      className="auth-input"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
+                    >
+                      <option value="">Select specialization</option>
+                      {Array.isArray(specializations) && specializations.map(spec => (
+                        <option key={spec.ID} value={spec.ID}>{spec.NAME}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Degrees</label>
+                    <input
+                      type="text"
+                      value={editForm.degrees}
+                      onChange={(e) => setEditForm({...editForm, degrees: e.target.value})}
+                      placeholder="e.g., MBBS, MD, PhD"
+                      className="auth-input"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
+                    />
+                  </div>
+
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Experience (Years)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.experienceYears}
+                      onChange={(e) => setEditForm({...editForm, experienceYears: e.target.value})}
+                      placeholder="e.g., 5"
+                      className="auth-input"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
+                    />
+                  </div>
+
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Consultation Fee (৳)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.fees}
+                      onChange={(e) => setEditForm({...editForm, fees: e.target.value})}
+                      placeholder="e.g., 500"
+                      className="auth-input"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
+                    />
+                  </div>
+
+                  {message && (
+                    <div className={`doctor-message ${message.includes('✅') ? 'success' : 'error'}`}>
+                      {message}
                     </div>
                   )}
 
-                  <button 
-                    className="btn-update-license"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      setLicenseError('');
-                      setLoading(true);
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                      className="btn-update-license"
+                      onClick={async () => {
+                        setLoading(true);
+                        setMessage('');
+                        
+                        // Validate
+                        if (!editForm.name || !editForm.phone) {
+                          setMessage('❌ Name and phone are required');
+                          setLoading(false);
+                          return;
+                        }
+                        
+                        if (editForm.phone && !/^\d{11}$/.test(editForm.phone)) {
+                          setMessage('❌ Phone must be 11 digits');
+                          setLoading(false);
+                          return;
+                        }
 
-                      const trimmedLicense = licenseNumber.trim().toUpperCase();
+                        try {
+                          // Update user info (name, phone)
+                          const userRes = await fetch('http://localhost:3000/api/profile/update', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              email: user.email,
+                              name: editForm.name,
+                              phone: editForm.phone
+                            })
+                          });
 
-                      if (trimmedLicense.length < 5 || trimmedLicense.length > 20) {
-                        setLicenseError('License must be 5-20 characters long');
-                        setLoading(false);
-                        return;
-                      }
+                          if (!userRes.ok) {
+                            const error = await userRes.json();
+                            setMessage('❌ ' + (error.error || 'Failed to update profile'));
+                            setLoading(false);
+                            return;
+                          }
 
-                      if (!/^[A-Z0-9]+$/.test(trimmedLicense)) {
-                        setLicenseError('License can only contain letters and numbers');
-                        setLoading(false);
-                        return;
-                      }
+                          // Update doctor-specific info
+                          const doctorRes = await fetch('http://localhost:3000/api/doctor/profile/update', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              email: user.email,
+                              degrees: editForm.degrees,
+                              experienceYears: parseInt(editForm.experienceYears) || 0,
+                              fees: parseInt(editForm.fees) || 0,
+                              gender: editForm.gender
+                            })
+                          });
 
-                      try {
-                        const res = await fetch('http://localhost:3000/api/doctor/license', {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            email: user.email,
-                            licenseNumber: trimmedLicense
-                          })
-                        });
+                          if (!doctorRes.ok) {
+                            const error = await doctorRes.json();
+                            setMessage('❌ ' + (error.error || 'Failed to update doctor profile'));
+                            setLoading(false);
+                            return;
+                          }
 
-                        const result = await res.json();
+                          // Update specialization if provided
+                          if (editForm.specializationId) {
+                            const specRes = await fetch('http://localhost:3000/api/doctor/specialization', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                email: user.email,
+                                specializationId: parseInt(editForm.specializationId)
+                              })
+                            });
 
-                        if (res.ok) {
-                          setMessage('✅ ' + result.message);
-                          setLicenseNumber('');
-                          fetchDoctorProfile(user.email);
+                            if (!specRes.ok) {
+                              const error = await specRes.json();
+                              setMessage('❌ ' + (error.error || 'Failed to update specialization'));
+                              setLoading(false);
+                              return;
+                            }
+                          }
+
+                          setMessage('✅ Profile updated successfully');
+                          
+                          // Update localStorage
+                          const updatedUser = {...user, name: editForm.name, phone: editForm.phone};
+                          localStorage.setItem('user', JSON.stringify(updatedUser));
+                          setUser(updatedUser);
+                          
+                          // Refresh profile
+                          await fetchDoctorProfile(user.email);
+                          
                           setTimeout(() => {
                             setMessage('');
                             setActiveView('profile');
                           }, 2000);
-                        } else {
-                          setLicenseError(result.error || 'Failed to update license');
+                        } catch (err) {
+                          console.error('Error updating profile:', err);
+                          setMessage('❌ Server error');
+                        } finally {
+                          setLoading(false);
                         }
-                      } catch (err) {
-                        console.error('Error updating license:', err);
-                        setLicenseError('Server error');
-                      } finally {
-                        setLoading(false);
-                      }
-                    }}
-                    disabled={loading || !licenseNumber}
-                  >
-                    {loading ? 'Updating...' : 'Update License'}
-                  </button>
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? 'Updating...' : 'Update Profile'}
+                    </button>
+                    
+                    <button 
+                      className="btn-update-license"
+                      style={{ background: '#6b7280' }}
+                      onClick={() => {
+                        setActiveView('profile');
+                        setMessage('');
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

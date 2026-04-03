@@ -3,6 +3,7 @@ const connectDB = require("../db/connection");
 
 exports.getPatientProfile = async (req, res) => {
   const { email } = req.params;
+  console.log('🔍 GET profile request for email:', email);
 
   let connection;
   try {
@@ -19,7 +20,10 @@ exports.getPatientProfile = async (req, res) => {
       { email }
     );
 
+    console.log('📊 Query returned rows:', userResult.rows.length);
+
     if (userResult.rows.length === 0) {
+      console.log('❌ Patient not found for email:', email);
       return res.status(404).json({ error: "❌ Patient not found" });
     }
 
@@ -30,7 +34,7 @@ exports.getPatientProfile = async (req, res) => {
       email: row[2],
       phone: row[3],
       role: row[4],
-      dateOfBirth: row[5],
+      dateOfBirth: row[5]?new Date(row[5]).toISOString().split('T')[0]:null,
       gender: row[6],
       occupation: row[7],
       bloodType: row[8],
@@ -38,9 +42,10 @@ exports.getPatientProfile = async (req, res) => {
       address: row[10]
     };
 
+    console.log('✅ Returning profile:', profile);
     return res.status(200).json(profile);
   } catch (err) {
-    console.error("Get patient profile error:", err);
+    console.error("❌ Get patient profile error:", err);
     return res.status(500).json({ error: "❌ Failed to get profile" });
   } finally {
     if (connection) await connection.close();
@@ -118,6 +123,10 @@ exports.updatePatientProfile = async (req, res) => {
   const { name, phone, dateOfBirth, gender, bloodType, maritalStatus, occupation, address } = req.body;
   const userEmail = req.user?.email;
 
+  console.log('🔄 UPDATE profile request');
+  console.log('📧 User email from token:', userEmail);
+  console.log('📝 Update data:', { name, phone, dateOfBirth, gender, bloodType, maritalStatus, occupation, address });
+
   if (!userEmail) {
     return res.status(401).json({ error: "❌ Unauthorized" });
   }
@@ -127,13 +136,14 @@ exports.updatePatientProfile = async (req, res) => {
     connection = await connectDB();
 
     // Update USERS table
-    await connection.execute(
+    const userUpdateResult = await connection.execute(
       `UPDATE USERS
        SET NAME = :name, PHONE = :phone
        WHERE TRIM(LOWER(EMAIL)) = TRIM(LOWER(:email))
          AND TRIM(UPPER(ROLE)) = 'PATIENT'`,
       { name, phone, email: userEmail }
     );
+    console.log('✅ USERS table updated, rows affected:', userUpdateResult.rowsAffected);
 
     // Get user ID
     const userResult = await connection.execute(
@@ -143,30 +153,52 @@ exports.updatePatientProfile = async (req, res) => {
 
     if (userResult.rows.length > 0) {
       const userId = userResult.rows[0][0];
+      console.log('👤 User ID:', userId);
 
       // Update PATIENT table
-      await connection.execute(
-        `UPDATE PATIENT
-         SET DATE_OF_BIRTH = :dateOfBirth,
-             GENDER = :gender,
-             BLOOD_TYPE = :bloodType,
-             MARITAL_STATUS = :maritalStatus,
-             OCCUPATION = :occupation,
-             ADDRESS = :address
-         WHERE USER_ID = :userId`,
-        {
-          userId,
-          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-          gender: gender || null,
-          bloodType: bloodType || null,
-          maritalStatus: maritalStatus || null,
-          occupation: occupation || null,
-          address: address || null
-        }
-      );
+     const updateResult = await connection.execute(
+  `UPDATE PATIENT
+   SET DATE_OF_BIRTH = :dateOfBirth,
+       GENDER = :gender,
+       BLOOD_TYPE = :bloodType,
+       MARITAL_STATUS = :maritalStatus,
+       OCCUPATION = :occupation,
+       ADDRESS = :address
+   WHERE USER_ID = :userId`,
+  {
+    userId,
+    dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+    gender: gender || null,
+    bloodType: bloodType || null,
+    maritalStatus: maritalStatus || null,
+    occupation: occupation || null,
+    address: address || null
+  }
+);
+
+console.log('✅ PATIENT table updated, rows affected:', updateResult.rowsAffected);
+
+if (updateResult.rowsAffected === 0) {
+  console.log('⚠️ No PATIENT record found, inserting new one');
+  await connection.execute(
+    `INSERT INTO PATIENT (USER_ID, DATE_OF_BIRTH, GENDER, BLOOD_TYPE, MARITAL_STATUS, OCCUPATION, ADDRESS)
+     VALUES (:userId, :dateOfBirth, :gender, :bloodType, :maritalStatus, :occupation, :address)`,
+    {
+      userId,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      gender: gender || null,
+      bloodType: bloodType || null,
+      maritalStatus: maritalStatus || null,
+      occupation: occupation || null,
+      address: address || null
+    }
+  );
+  console.log('✅ PATIENT record inserted');
+}
     }
 
     await connection.commit();
+    console.log('✅ Transaction committed');
 
     return res.status(200).json({
       message: "✅ Profile updated successfully",
@@ -174,11 +206,12 @@ exports.updatePatientProfile = async (req, res) => {
       phone
     });
   } catch (err) {
-    console.error("Update patient profile error:", err);
+    console.error("❌ Update patient profile error:", err);
 
     if (connection) {
       try {
         await connection.rollback();
+        console.log('🔄 Transaction rolled back');
       } catch (_) {}
     }
 

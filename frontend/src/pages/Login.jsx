@@ -44,18 +44,8 @@ export default function Login() {
       const userRole = role.toUpperCase();
       
       if (userRole === "DOCTOR") {
-        // Check if doctor has license
-        const profileRes = await fetch(`http://localhost:3000/api/doctor/profile/${data.user.email}`);
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          if (!profileData.license || profileData.license === 'Not provided') {
-            navigate("/doctor/license-verification");
-          } else {
-            navigate("/doctor/dashboard");
-          }
-        } else {
-          navigate("/doctor/license-verification");
-        }
+        // Go directly to dashboard - let dashboard handle license check
+        navigate("/doctor/dashboard");
       } else if (userRole === "PATIENT") {
         navigate("/patient/dashboard");
       } else if (userRole === "ADMIN") {

@@ -15,24 +15,43 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    console.log('👤 User data from localStorage:', userData);
+    
     if (!userData.token || userData.role?.toUpperCase() !== 'PATIENT') {
       navigate('/login');
       return;
     }
+    
     setUser(userData);
-    fetchPatientProfile(userData.email);
-    fetchAppointments(userData.email);
+    
+    if (userData.email) {
+      console.log('📧 Fetching profile for email:', userData.email);
+      fetchPatientProfile(userData.email);
+      fetchAppointments(userData.email);
+    } else {
+      console.error('❌ No email in userData!');
+      setMessage('❌ Session error - please login again');
+    }
   }, [navigate]);
 
   const fetchPatientProfile = async (email) => {
+    console.log('🔍 Fetching profile for email:', email);
     try {
       const res = await fetch(`http://localhost:3000/api/patient/profile/${email}`);
+      console.log('📡 Profile fetch response status:', res.status);
+      
       if (res.ok) {
         const data = await res.json();
+        console.log('✅ Profile data received:', data);
         setProfileData(data);
+      } else {
+        const error = await res.json();
+        console.error('❌ Profile fetch failed:', error);
+        setMessage('❌ Failed to load profile: ' + error.error);
       }
     } catch (err) {
-      console.error('Error fetching patient profile:', err);
+      console.error('❌ Error fetching profile:', err);
+      setMessage('❌ Error loading profile');
     }
   };
 
@@ -182,9 +201,7 @@ export default function PatientDashboard() {
               <div className="profile-menu-item" onClick={() => { setActiveView('profile'); setShowProfileMenu(false); }}>
                 <span>👤</span> View Profile
               </div>
-              <div className="profile-menu-item" onClick={() => { setActiveView('profile'); setEditMode(true); setShowProfileMenu(false); }}>
-                <span>✏️</span> Edit Profile
-              </div>
+              
               <div className="profile-menu-item" onClick={handleLogout}>
                 <span>🚪</span> Logout
               </div>
@@ -389,15 +406,15 @@ export default function PatientDashboard() {
                   <div className="profile-info">
                     <div className="info-row">
                       <label>Name:</label>
-                      <span>{profileData.name || 'Not provided'}</span>
+                      <span>{profileData.name || user?.name || 'Not provided'}</span>
                     </div>
                     <div className="info-row">
                       <label>Email:</label>
-                      <span>{profileData.email || 'Not provided'}</span>
+                      <span>{profileData.email || user?.email || 'Not provided'}</span>
                     </div>
                     <div className="info-row">
                       <label>Phone:</label>
-                      <span>{profileData.phone || 'Not provided'}</span>
+                      <span>{profileData.phone || user?.phone || 'Not provided'}</span>
                     </div>
                     <div className="info-row">
                       <label>Date of Birth:</label>

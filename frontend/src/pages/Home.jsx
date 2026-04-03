@@ -33,17 +33,7 @@ export default function Home() {
       const res = await fetch('http://localhost:3000/api/specialties');
       if (res.ok) {
         const data = await res.json();
-        // Remove duplicates by name (case-insensitive)
-        const uniqueSpecialties = [];
-        const seen = new Set();
-        for (const spec of data.specialties || []) {
-          const nameLower = spec.name.toLowerCase().trim();
-          if (!seen.has(nameLower)) {
-            seen.add(nameLower);
-            uniqueSpecialties.push(spec);
-          }
-        }
-        setSpecialties(uniqueSpecialties);
+        setSpecialties(data.specialties || []);
       }
     } catch (err) {
       console.error('Error fetching specialties:', err);

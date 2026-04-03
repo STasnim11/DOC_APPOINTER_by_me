@@ -45,7 +45,7 @@ exports.getDoctorAppointments = async (req, res) => {
           pu.PHONE as PATIENT_PHONE,
           p.ID as PRESCRIPTION_ID
        FROM DOCTORS_APPOINTMENTS da
-       JOIN TIME_SLOTS ts ON da.TIME_SLOT_ID = ts.ID
+       LEFT JOIN TIME_SLOTS ts ON da.TIME_SLOT_ID = ts.ID
        JOIN PATIENT pat ON da.PATIENT_ID = pat.ID
        JOIN USERS pu ON pat.USER_ID = pu.ID
        LEFT JOIN PRESCRIPTION p ON da.ID = p.APPOINTMENT_ID

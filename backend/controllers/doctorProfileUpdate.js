@@ -5,6 +5,9 @@ exports.getDoctorProfile = async (req, res) => {
   const { email } = req.params;
   let connection;
 
+  console.log('=== GET DOCTOR PROFILE START ===');
+  console.log('Email parameter:', email);
+
   if (!email) {
     return res.status(400).json({ error: "❌ Email is required" });
   }
@@ -14,38 +17,68 @@ exports.getDoctorProfile = async (req, res) => {
 
     // Get user info
     const userResult = await connection.execute(
-      `SELECT u.ID, u.NAME, u.EMAIL
+      `SELECT u.ID, u.NAME, u.EMAIL, u.PHONE
        FROM USERS u
        WHERE TRIM(LOWER(u.EMAIL)) = TRIM(LOWER(:email))
          AND TRIM(UPPER(u.ROLE)) = 'DOCTOR'`,
       { email }
     );
 
+    console.log('User query result rows:', userResult.rows.length);
+
     if (userResult.rows.length === 0) {
+      console.log('No user found for email:', email);
       return res.status(404).json({ error: "❌ Doctor not found" });
     }
 
-    const [userId, name, userEmail] = userResult.rows[0];
+    const [userId, name, userEmail, phone] = userResult.rows[0];
+    console.log('User found:', { userId, name, userEmail, phone });
 
     // Get doctor details
+    console.log('Querying DOCTOR table for USER_ID:', userId);
     const doctorResult = await connection.execute(
-      `SELECT d.ID, d.LICENSE_NUMBER
+      `SELECT d.ID, d.LICENSE_NUMBER, d.DEGREES, d.EXPERIENCE_YEARS, d.FEES, d.GENDER
        FROM DOCTOR d
        WHERE d.USER_ID = :userId`,
       { userId }
     );
+    
+    console.log('Doctor query result rows:', doctorResult.rows.length);
+    if (doctorResult.rows.length > 0) {
+      console.log('Raw doctor row data:', doctorResult.rows[0]);
+    }
 
     let license = "Not provided";
-    let specialization = "Not provided";
+    let degrees = "Not provided";
+    let experienceYears = 0;
+    let fees = null;
+    let gender = null;
+    let specialization = null;
+    let specializationId = null;
     let doctorId = null;
 
     if (doctorResult.rows.length > 0) {
       doctorId = doctorResult.rows[0][0];
       license = doctorResult.rows[0][1] || "Not provided";
+      degrees = doctorResult.rows[0][2] || "Not provided";
+      experienceYears = doctorResult.rows[0][3] || 0;
+      fees = doctorResult.rows[0][4];
+      gender = doctorResult.rows[0][5];
+      
+      console.log('Doctor data from DB:', {
+        doctorId,
+        license,
+        degrees,
+        experienceYears,
+        fees,
+        gender
+      });
+      console.log('License is NULL?', doctorResult.rows[0][1] === null);
+      console.log('License raw value:', doctorResult.rows[0][1]);
       
       // Get specialization from DOC_SPECIALIZATION table
       const specResult = await connection.execute(
-        `SELECT s.NAME
+        `SELECT s.ID, s.NAME
          FROM DOC_SPECIALIZATION ds
          JOIN SPECIALIZATION s ON ds.SPECIALIZATION_ID = s.ID
          WHERE ds.DOCTOR_ID = :doctorId`,
@@ -53,43 +86,17 @@ exports.getDoctorProfile = async (req, res) => {
       );
       
       if (specResult.rows.length > 0) {
-        specialization = specResult.rows[0][0] || "Not provided";
+        specializationId = specResult.rows[0][0];
+        specialization = specResult.rows[0][1];
       }
     }
-
-    // Get availability (from DOCTOR_SCHEDULE table if exists)
-    const availabilityResult = await connection.execute(
-      `SELECT DAY_OF_WEEK, START_TIME, END_TIME
-       FROM DOCTOR_SCHEDULE
-       WHERE DOCTOR_ID = :doctorId`,
-      { doctorId }
-    );
-
-    const availability = {
-      Sunday: { active: false, start: "10:00", end: "18:00" },
-      Monday: { active: false, start: "10:00", end: "18:00" },
-      Tuesday: { active: false, start: "10:00", end: "18:00" },
-      Wednesday: { active: false, start: "10:00", end: "18:00" },
-      Thursday: { active: false, start: "10:00", end: "18:00" },
-      Friday: { active: false, start: "10:00", end: "18:00" },
-      Saturday: { active: false, start: "10:00", end: "18:00" },
-    };
-
-    availabilityResult.rows.forEach(row => {
-      const day = row[0];
-      const start = row[1];
-      const end = row[2];
-      if (availability[day]) {
-        availability[day] = { active: true, start, end };
-      }
-    });
 
     // Get appointments
     const appointmentsResult = await connection.execute(
       `SELECT da.ID, da.APPOINTMENT_DATE, da.STATUS, da.TYPE,
-              ts.START_TIME, ts.END_TIME, pu.NAME as PATIENT_NAME
+              ts.START_TIME, ts.END_TIME, pu.NAME as PATIENT_NAME, pu.PHONE as PATIENT_PHONE, pu.EMAIL as PATIENT_EMAIL
        FROM DOCTORS_APPOINTMENTS da
-       JOIN TIME_SLOTS ts ON da.TIME_SLOT_ID = ts.ID
+       LEFT JOIN TIME_SLOTS ts ON da.TIME_SLOT_ID = ts.ID
        JOIN PATIENT p ON da.PATIENT_ID = p.ID
        JOIN USERS pu ON p.USER_ID = pu.ID
        WHERE da.DOCTOR_ID = :doctorId
@@ -105,20 +112,35 @@ exports.getDoctorProfile = async (req, res) => {
       startTime: row[4],
       endTime: row[5],
       patientName: row[6],
+      patientPhone: row[7],
+      patientEmail: row[8],
     }));
+
+    console.log('=== RESPONSE SENT ===');
+    console.log('License in response:', license);
 
     return res.status(200).json({
       name,
       email: userEmail,
+      phone,
       license,
+      degrees,
+      experienceYears,
+      fees,
+      gender,
       specialization,
-      availability,
+      specializationId,
       appointments,
     });
 
   } catch (error) {
     console.error("Get doctor profile error:", error);
-    return res.status(500).json({ error: "❌ Failed to fetch doctor profile" });
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    return res.status(500).json({ 
+      error: "❌ Failed to fetch doctor profile",
+      details: error.message 
+    });
   } finally {
     if (connection) {
       try {
@@ -511,3 +533,100 @@ exports.updateDoctorLicense = async (req, res) => {
 //     }
 //   }
 // };
+
+
+// Update doctor basic info (degrees, experience, fees, gender) - simplified version
+exports.updateDoctorBasicInfo = async (req, res) => {
+  const { email, degrees, experienceYears, fees, gender } = req.body;
+  let connection;
+
+  if (!email) {
+    return res.status(400).json({
+      error: "❌ Email is required",
+    });
+  }
+
+  try {
+    connection = await connectDB();
+
+    // Get doctor ID
+    const result = await connection.execute(
+      `SELECT d.ID
+       FROM DOCTOR d
+       JOIN USERS u ON d.USER_ID = u.ID
+       WHERE TRIM(LOWER(u.EMAIL)) = TRIM(LOWER(:email))
+         AND TRIM(UPPER(u.ROLE)) = 'DOCTOR'`,
+      { email }
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "❌ Doctor profile not found",
+      });
+    }
+
+    const doctorId = result.rows[0][0];
+
+    // Build dynamic update query
+    const updates = [];
+    const params = { doctorId };
+
+    if (degrees !== undefined && degrees !== null && degrees !== '') {
+      updates.push('DEGREES = :degrees');
+      params.degrees = degrees;
+    }
+    if (experienceYears !== undefined && experienceYears !== null && experienceYears !== '') {
+      updates.push('EXPERIENCE_YEARS = :experienceYears');
+      params.experienceYears = experienceYears;
+    }
+    if (fees !== undefined && fees !== null && fees !== '') {
+      updates.push('FEES = :fees');
+      params.fees = fees;
+    }
+    if (gender !== undefined && gender !== null && gender !== '') {
+      updates.push('GENDER = :gender');
+      params.gender = gender;
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        error: "❌ No fields to update",
+      });
+    }
+
+    console.log('Updating doctor with:', params);
+    console.log('Update query:', `UPDATE DOCTOR SET ${updates.join(', ')} WHERE ID = :doctorId`);
+
+    await connection.execute(
+      `UPDATE DOCTOR SET ${updates.join(', ')} WHERE ID = :doctorId`,
+      params
+    );
+
+    await connection.commit();
+
+    return res.status(200).json({
+      message: "✅ Profile updated successfully",
+    });
+  } catch (error) {
+    console.error("Update doctor basic info error:", error);
+    console.error("Error details:", error.message);
+
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (_) {}
+    }
+
+    return res.status(500).json({
+      error: "❌ Failed to update profile: " + error.message,
+    });
+  } finally {
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (closeError) {
+        console.error("Error closing DB connection:", closeError);
+      }
+    }
+  }
+};
