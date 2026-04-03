@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import '../styles/Home.css';
+import DoctorAvatar from '../components/DoctorAvatar';
 
 const getSpecialtyIcon = (specialty) => {
   const icons = {
@@ -137,11 +138,21 @@ export default function Home() {
                 onClick={() => navigate(`/doctor/${doctor.id}`)}
                 style={{ cursor: 'pointer' }}
               >
-                <img 
-                  src={`https://images.unsplash.com/photo-${doctor.id % 2 === 0 ? '1559839734-2b71ea197ec2' : '1612349317150-e413f6a5b16d'}?w=300&h=300&fit=crop`} 
-                  alt={doctor.name} 
-                  className="doctor-image" 
-                />
+                <div className="doctor-avatar-home" style={{
+                  width: '100%',
+                  height: '200px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: doctor.gender === 'Male' 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : doctor.gender === 'Female'
+                    ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                    : 'linear-gradient(135deg, #a8a8a8 0%, #6b6b6b 100%)',
+                  borderRadius: '12px 12px 0 0'
+                }}>
+                  <DoctorAvatar gender={doctor.gender} size={100} />
+                </div>
                 <div className="doctor-info">
                   <div className="doctor-status">
                     <span className="status-dot"></span>

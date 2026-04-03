@@ -16,6 +16,11 @@ export default function AdminDashboard() {
   const [searchAdminId, setSearchAdminId] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState({ type: '', title: '', message: '' });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState(null);
+  const [testFileUrl, setTestFileUrl] = useState('');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -54,9 +59,9 @@ export default function AdminDashboard() {
     { id: 'medical-technician', name: 'Medical Technician', icon: '👨‍🔬', path: '/admin/medical-technician' },
     { id: 'beds', name: 'Beds', icon: '🛏️', path: '/admin/beds' },
     { id: 'tests', name: 'Lab Tests', icon: '🔬', path: '/admin/lab-tests' },
-    { id: 'doctors', name: 'Doctors', icon: '👨‍⚕️', path: '/admin/doctors' },
+    { id: 'lab-test-appointments', name: 'Lab Test Appointments', icon: '🧪', path: '/admin/lab-test-appointments' },
     { id: 'medicines', name: 'Medicines', icon: '💊', path: '/admin/medicines' },
-    { id: 'appointments', name: 'Appointments', icon: '📅', path: '/admin/appointments' },
+    { id: 'bed-bookings', name: 'Bed Bookings', icon: '🛏️', path: '/admin/bed-bookings' },
     { id: 'departments', name: 'Departments', icon: '🏥', path: '/admin/departments' }
   ];
 
@@ -112,7 +117,9 @@ export default function AdminDashboard() {
         'departments': '/api/admin/departments',
         'beds': '/api/admin/beds',
         'tests': '/api/admin/lab-tests',
-        'medicines': '/api/admin/medicines'
+        'medicines': '/api/admin/medicines',
+        'lab-test-appointments': '/api/admin/lab-test-appointments',
+        'bed-bookings': '/api/admin/bed-bookings'
       };
 
       const endpoint = endpoints[selectedModule.id];
@@ -121,17 +128,41 @@ export default function AdminDashboard() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        setMessage('✅ Deleted successfully!');
+        setModalMessage({
+          type: 'success',
+          title: 'Deleted Successfully',
+          message: `The ${selectedModule.name.toLowerCase()} has been removed from the system.`
+        });
+        setShowModal(true);
         fetchData(selectedModule.id);
-        setTimeout(() => setMessage(''), 2000);
       } else {
-        const result = await res.json();
-        setMessage('❌ ' + (result.error || 'Failed to delete'));
+        // Check for foreign key constraint error
+        if (data.error && (data.error.includes('constraint') || data.error.includes('integrity') || data.error.includes('referenced'))) {
+          setModalMessage({
+            type: 'error',
+            title: 'Cannot Delete',
+            message: `This ${selectedModule.name.toLowerCase()} cannot be deleted because it is being used by other records in the system. Please remove all dependencies first.`
+          });
+        } else {
+          setModalMessage({
+            type: 'error',
+            title: 'Delete Failed',
+            message: data.error || `Unable to delete ${selectedModule.name.toLowerCase()}. Please try again.`
+          });
+        }
+        setShowModal(true);
       }
     } catch (err) {
       console.error('Error deleting:', err);
-      setMessage('❌ Server error');
+      setModalMessage({
+        type: 'error',
+        title: 'Error',
+        message: 'Network error. Please check your connection and try again.'
+      });
+      setShowModal(true);
     } finally {
       setLoading(false);
     }
@@ -165,7 +196,9 @@ export default function AdminDashboard() {
         'departments': '/api/admin/departments',
         'beds': '/api/admin/beds',
         'tests': '/api/admin/lab-tests',
-        'medicines': '/api/admin/medicines'
+        'medicines': '/api/admin/medicines',
+        'lab-test-appointments': '/api/admin/lab-test-appointments',
+        'bed-bookings': '/api/admin/bed-bookings'
       };
 
       const endpoint = endpoints[moduleId];
@@ -195,6 +228,8 @@ export default function AdminDashboard() {
         else if (result.branches) setData(result.branches);
         else if (result.technicians) setData(result.technicians);
         else if (result.departments) setData(result.departments);
+        else if (result.appointments) setData(result.appointments);
+        else if (result.bookings) setData(result.bookings);
         else setData([]);
       } else {
         const error = await res.json();
@@ -233,7 +268,9 @@ export default function AdminDashboard() {
         'departments': '/api/admin/departments',
         'beds': '/api/admin/beds',
         'tests': '/api/admin/lab-tests',
-        'medicines': '/api/admin/medicines'
+        'medicines': '/api/admin/medicines',
+        'lab-test-appointments': '/api/admin/lab-test-appointments',
+        'bed-bookings': '/api/admin/bed-bookings'
       };
 
       const endpoint = endpoints[selectedModule.id];
@@ -552,9 +589,14 @@ export default function AdminDashboard() {
                 placeholder="e.g., 1, 2, 3"
               />
             </div>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Bed'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button type="button" className="btn-cancel" onClick={handleCancel}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Bed'}
+              </button>
+            </div>
           </form>
         );
 
@@ -712,7 +754,6 @@ export default function AdminDashboard() {
         );
 
       case 'doctors':
-      case 'appointments':
         return (
           <div className="placeholder-form">
             <p>📝 {selectedModule?.name} management</p>
@@ -994,13 +1035,337 @@ export default function AdminDashboard() {
           </table>
         );
 
+      case 'lab-test-appointments':
+        return (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Patient</th>
+                <th>Test Name</th>
+                <th>Department</th>
+                <th>Technician</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item) => (
+                <tr key={item.id}>
+                  <td style={{ fontWeight: 'bold', color: '#3498db' }}>{item.token}</td>
+                  <td>
+                    <div>{item.patientName}</div>
+                    <div style={{ fontSize: '12px', color: '#7f8c8d' }}>{item.patientEmail}</div>
+                  </td>
+                  <td>{item.testName}</td>
+                  <td>{item.department || 'N/A'}</td>
+                  <td>{item.technicianName || 'Not Assigned'}</td>
+                  <td>₹{item.price}</td>
+                  <td>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      background: item.status === 'COMPLETED' ? '#d4edda' : '#fff3cd',
+                      color: item.status === 'COMPLETED' ? '#155724' : '#856404'
+                    }}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td>
+                    <button 
+                      className="btn-edit" 
+                      onClick={() => {
+                        setEditingAppointment(item);
+                        setTestFileUrl(item.testFileUrl || '');
+                        setShowEditModal(true);
+                      }}
+                    >
+                      {item.status === 'COMPLETED' ? 'View' : 'Upload Result'}
+                    </button>
+                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+
+      case 'bed-bookings':
+        return (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Bed Info</th>
+                <th>Appointment Date</th>
+                <th>Price/Day</th>
+                <th>Status</th>
+                <th>Booked At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item) => (
+                <tr key={item.id}>
+                  <td style={{ fontWeight: 'bold', color: '#3498db' }}>#{item.id}</td>
+                  <td>
+                    <div>{item.patientName}</div>
+                    <div style={{ fontSize: '12px', color: '#7f8c8d' }}>{item.patientEmail}</div>
+                  </td>
+                  <td>{item.doctorName}</td>
+                  <td>
+                    <div><strong>Bed {item.bedNumber}</strong></div>
+                    <div style={{ fontSize: '12px', color: '#7f8c8d' }}>
+                      {item.wardName} - {item.bedType}
+                      {item.floorNumber && ` (Floor ${item.floorNumber})`}
+                    </div>
+                  </td>
+                  <td>{new Date(item.appointmentDate).toLocaleDateString()}</td>
+                  <td>₹{item.pricePerDay}</td>
+                  <td>
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      background: item.status === 'BOOKED' ? '#d4edda' : '#fff3cd',
+                      color: item.status === 'BOOKED' ? '#155724' : '#856404'
+                    }}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td>{new Date().toLocaleString()}</td>
+                  <td>
+                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+
       default:
         return <div className="no-data">Select a module to view data</div>;
     }
   };
 
+  // Modal Component
+  const Modal = ({ show, onClose, type, title, message }) => {
+    if (!show) return null;
+    
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '2rem',
+          maxWidth: '400px',
+          width: '90%',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
+              {type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+            </div>
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#1f2937' }}>{title}</h3>
+            <p style={{ color: '#6b7280', margin: '0 0 1.5rem 0' }}>{message}</p>
+            <button
+              onClick={onClose}
+              style={{
+                background: type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: '600'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Edit Lab Test Appointment Modal
+  const EditLabTestModal = () => {
+    if (!showEditModal || !editingAppointment) return null;
+
+    const handleUpdateLabTest = async () => {
+      if (!testFileUrl.trim()) {
+        alert('Please enter a test file URL');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const token = user.token;
+
+        const res = await fetch(`http://localhost:3000/api/admin/lab-test-appointments/${editingAppointment.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ testFileUrl })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setModalMessage({
+            type: 'success',
+            title: 'Updated Successfully',
+            message: 'Lab test result has been uploaded and status changed to COMPLETED.'
+          });
+          setShowModal(true);
+          setShowEditModal(false);
+          fetchData('lab-test-appointments');
+        } else {
+          alert('Failed to update: ' + (data.message || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error('Error updating lab test:', err);
+        alert('Error: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '2rem',
+          maxWidth: '500px',
+          width: '90%',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        }}>
+          <h3 style={{ margin: '0 0 1rem 0', color: '#1f2937' }}>
+            {editingAppointment.status === 'COMPLETED' ? 'View Test Result' : 'Upload Test Result'}
+          </h3>
+          
+          <div style={{ marginBottom: '1rem', padding: '1rem', background: '#f3f4f6', borderRadius: '8px' }}>
+            <p style={{ margin: '0.25rem 0', fontSize: '14px' }}>
+              <strong>Token:</strong> {editingAppointment.token}
+            </p>
+            <p style={{ margin: '0.25rem 0', fontSize: '14px' }}>
+              <strong>Patient:</strong> {editingAppointment.patientName}
+            </p>
+            <p style={{ margin: '0.25rem 0', fontSize: '14px' }}>
+              <strong>Test:</strong> {editingAppointment.testName}
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600', color: '#374151' }}>
+              Test Result URL
+            </label>
+            <input
+              key={editingAppointment.id}
+              type="url"
+              value={testFileUrl}
+              onChange={(e) => setTestFileUrl(e.target.value)}
+              placeholder="https://example.com/test-result.pdf"
+              disabled={editingAppointment.status === 'COMPLETED'}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => {
+                setShowEditModal(false);
+                setEditingAppointment(null);
+                setTestFileUrl('');
+              }}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                background: 'white',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}
+            >
+              Close
+            </button>
+            {editingAppointment.status !== 'COMPLETED' && (
+              <button
+                onClick={handleUpdateLabTest}
+                disabled={loading}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: '#3b82f6',
+                  color: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600'
+                }}
+              >
+                {loading ? 'Uploading...' : 'Upload & Complete'}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="admin-dashboard">
+      <Modal 
+        show={showModal} 
+        onClose={() => setShowModal(false)}
+        type={modalMessage.type}
+        title={modalMessage.title}
+        message={modalMessage.message}
+      />
+      <EditLabTestModal />
       <header className="admin-header">
         <h1>Admin Dashboard</h1>
         <button onClick={handleLogout} className="logout-btn">Logout</button>
@@ -1057,12 +1422,6 @@ export default function AdminDashboard() {
             <div className="content-area">
               <div className="content-header">
                 <h2>{selectedModule.name} - {activeView === 'view' ? 'View' : 'Add New'}</h2>
-                {activeView === 'add' && (
-                  <div className="action-buttons">
-                    <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-                    <button className="btn-save">Save</button>
-                  </div>
-                )}
               </div>
               
               <div className="content-body">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/DoctorDashboard.css";
+import DoctorAvatar from "../components/DoctorAvatar";
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -14,9 +15,14 @@ export default function DoctorDashboard() {
   const [doctorProfile, setDoctorProfile] = useState({});
   const [appointments, setAppointments] = useState([]);
   const [todayCount, setTodayCount] = useState(0);
-  const [filter, setFilter] = useState('all'); // all, upcoming, completed, cancelled
+  const [filter, setFilter] = useState('all'); // all, today, upcoming, completed, cancelled
   const [specializations, setSpecializations] = useState([]);
   const [scheduleLoaded, setScheduleLoaded] = useState(false);
+  
+  // Prescription modal states
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [prescriptionData, setPrescriptionData] = useState(null);
+  const [loadingPrescription, setLoadingPrescription] = useState(false);
   
   // Edit profile form state
   const [editForm, setEditForm] = useState({
@@ -55,33 +61,26 @@ export default function DoctorDashboard() {
 
   const fetchDoctorSchedule = async (email) => {
     try {
-      console.log('🔍 Fetching doctor schedule for:', email);
       const res = await fetch(`http://localhost:3000/api/doctor/schedule/${email}`);
       if (res.ok) {
         const data = await res.json();
-        console.log('✅ Schedule data received:', data);
         if (data.schedule) {
           setSchedule(data.schedule);
           setScheduleLoaded(true);
         }
       } else {
-        console.log('⚠️ No existing schedule found, using defaults');
         setScheduleLoaded(false);
       }
     } catch (err) {
-      console.error('❌ Error fetching doctor schedule:', err);
       setScheduleLoaded(false);
     }
   };
 
   const fetchDoctorProfile = async (email) => {
     try {
-      console.log('Fetching doctor profile for:', email);
       const res = await fetch(`http://localhost:3000/api/doctor/profile/${email}`);
       if (res.ok) {
         const data = await res.json();
-        console.log('Doctor profile data received:', data);
-        console.log('License value:', data.license);
         setDoctorProfile(data);
         
         // Populate edit form with current data
@@ -97,31 +96,36 @@ export default function DoctorDashboard() {
         
         // Check if license exists - redirect to verification if not
         if (!data.license || data.license === 'Not provided') {
-          console.log('No license found, redirecting to verification');
           navigate('/doctor/license-verification');
-        } else {
-          console.log('License found:', data.license);
         }
-      } else {
-        console.error('Failed to fetch profile, status:', res.status);
       }
     } catch (err) {
-      console.error('Error fetching doctor profile:', err);
+      // Error fetching profile
     }
   };
 
-  const fetchSpecializations = async () => {
-    try {
-      const res = await fetch('http://localhost:3000/api/specialties');
-      if (res.ok) {
-        const data = await res.json();
-        setSpecializations(data);
-      }
-    } catch (err) {
-      console.error('Error fetching specializations:', err);
+  // const fetchSpecializations = async () => {
+  //   try {
+  //     const res = await fetch('http://localhost:3000/api/specialties');
+  //     if (res.ok) {
+  //       const data = await res.json();
+  //       setSpecializations(data);
+  //     }
+  //   } catch (err) {
+  //     // Error fetching specializations
+  //   }
+  // };
+const fetchSpecializations = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/api/doctor/specializations'); // ✅ was /api/specialties
+    if (res.ok) {
+      const data = await res.json();
+      setSpecializations(data); // ✅ already a plain array [{ID, NAME}]
     }
-  };
-
+  } catch (err) {
+    console.error('Error fetching specializations:', err);
+  }
+};
   const fetchAppointments = async (email) => {
     setLoading(true);
     try {
@@ -131,9 +135,34 @@ export default function DoctorDashboard() {
         setAppointments(data.appointments || []);
       }
     } catch (err) {
-      console.error('Error fetching appointments:', err);
+      // Error fetching appointments
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewPrescription = async (prescriptionId) => {
+    setLoadingPrescription(true);
+    setShowPrescriptionModal(true);
+    setPrescriptionData(null);
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/prescriptions/${prescriptionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.prescription) {
+          setPrescriptionData(data.prescription);
+        } else {
+          setPrescriptionData({ error: 'Invalid prescription data format' });
+        }
+      } else {
+        const errorData = await res.json();
+        setPrescriptionData({ error: errorData.message || 'Failed to load prescription' });
+      }
+    } catch (err) {
+      setPrescriptionData({ error: 'Network error loading prescription' });
+    } finally {
+      setLoadingPrescription(false);
     }
   };
 
@@ -145,7 +174,7 @@ export default function DoctorDashboard() {
         setTodayCount(data.totalPatients || 0);
       }
     } catch (err) {
-      console.error('Error fetching today count:', err);
+      // Error fetching today count
     }
   };
 
@@ -187,7 +216,6 @@ export default function DoctorDashboard() {
         setMessage('❌ ' + (result.error || 'Failed to save availability'));
       }
     } catch (err) {
-      console.error('Error saving availability:', err);
       setMessage('❌ Server error');
     } finally {
       setLoading(false);
@@ -203,26 +231,214 @@ export default function DoctorDashboard() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Sort by nearest first
+    const sorted = [...appointments].sort((a, b) => {
+      return new Date(a.appointmentDate) - new Date(b.appointmentDate);
+    });
+
     switch (filter) {
-      case 'upcoming':
-        return appointments.filter(apt => {
+      case 'today':
+        return sorted.filter(apt => {
           const aptDate = new Date(apt.appointmentDate);
           aptDate.setHours(0, 0, 0, 0);
-          return apt.status === 'BOOKED' && aptDate >= today;
+          return aptDate.getTime() === today.getTime() && apt.status === 'BOOKED';
+        });
+      case 'upcoming':
+        return sorted.filter(apt => {
+          const aptDate = new Date(apt.appointmentDate);
+          aptDate.setHours(0, 0, 0, 0);
+          return apt.status === 'BOOKED' && aptDate > today;
         });
       case 'completed':
-        return appointments.filter(apt => apt.status === 'COMPLETED');
+        return sorted.filter(apt => apt.status === 'COMPLETED');
       case 'cancelled':
-        return appointments.filter(apt => apt.status === 'CANCELLED');
+        return sorted.filter(apt => apt.status === 'CANCELLED');
       default:
-        return appointments;
+        return sorted;
     }
   };
 
   const filteredAppointments = getFilteredAppointments();
 
+  // Count appointments by category
+  const appointmentCounts = {
+    all: appointments.length,
+    today: appointments.filter(apt => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const aptDate = new Date(apt.appointmentDate);
+      aptDate.setHours(0, 0, 0, 0);
+      return aptDate.getTime() === today.getTime() && apt.status === 'BOOKED';
+    }).length,
+    upcoming: appointments.filter(apt => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const aptDate = new Date(apt.appointmentDate);
+      aptDate.setHours(0, 0, 0, 0);
+      return apt.status === 'BOOKED' && aptDate > today;
+    }).length,
+    completed: appointments.filter(apt => apt.status === 'COMPLETED').length,
+    cancelled: appointments.filter(apt => apt.status === 'CANCELLED').length
+  };
+
+  // Prescription Modal Component
+  const PrescriptionModal = ({ show, onClose, prescription, loading }) => {
+    if (!show) return null;
+    
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: '1rem'
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          padding: '2rem',
+          maxWidth: '600px',
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+          animation: 'slideIn 0.3s ease-out'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ margin: 0, color: '#1f2937' }}>📄 Prescription Details</h2>
+            <button
+              onClick={onClose}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                color: '#6b7280'
+              }}
+            >
+              ✕
+            </button>
+          </div>
+          
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>Loading prescription...</p>
+            </div>
+          ) : prescription?.error ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
+              <p>{prescription.error}</p>
+            </div>
+          ) : prescription ? (
+            <div>
+              {/* Prescription content - same as PatientDashboard */}
+              <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: '#6b7280' }}>Doctor</p>
+                    <p style={{ margin: 0, fontWeight: '600', color: '#1f2937' }}>{prescription.doctorName || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: '#6b7280' }}>Date Issued</p>
+                    <p style={{ margin: 0, fontWeight: '600', color: '#1f2937' }}>
+                      {prescription.dateIssued ? new Date(prescription.dateIssued).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {prescription.chiefComplaints && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', color: '#1f2937' }}>Chief Complaints</h3>
+                  <p style={{ margin: 0, padding: '0.75rem', background: '#fef3c7', borderRadius: '6px', color: '#92400e' }}>
+                    {prescription.chiefComplaints}
+                  </p>
+                </div>
+              )}
+
+              {prescription.diagnosis && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', color: '#1f2937' }}>Diagnosis</h3>
+                  <p style={{ margin: 0, padding: '0.75rem', background: '#dbeafe', borderRadius: '6px', color: '#1e40af' }}>
+                    {prescription.diagnosis}
+                  </p>
+                </div>
+              )}
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: '0 0 0.75rem 0', fontSize: '1rem', color: '#1f2937' }}>Prescribed Medicines</h3>
+                {prescription.medicines && prescription.medicines.length > 0 ? (
+                  <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    {prescription.medicines.map((med, index) => (
+                      <div key={index} style={{
+                        padding: '1rem',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        background: '#f9fafb'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontWeight: '600', color: '#1f2937', display: 'block' }}>{med.medicineName}</span>
+                            {med.manufacturer && (
+                              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>by {med.manufacturer}</span>
+                            )}
+                          </div>
+                          {med.dosage && (
+                            <span style={{ 
+                              background: '#dbeafe', 
+                              color: '#1e40af', 
+                              padding: '0.25rem 0.75rem', 
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              whiteSpace: 'nowrap',
+                              marginLeft: '0.5rem'
+                            }}>
+                              {med.dosage}
+                            </span>
+                          )}
+                        </div>
+                        {med.duration && (
+                          <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                            Duration: {med.duration}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: '#6b7280', fontStyle: 'italic' }}>No medicines prescribed</p>
+                )}
+              </div>
+
+              {prescription.instructions && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', color: '#1f2937' }}>Instructions</h3>
+                  <p style={{ margin: 0, padding: '0.75rem', background: '#dcfce7', borderRadius: '6px', color: '#166534', fontSize: '0.875rem' }}>
+                    {prescription.instructions}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="doctor-dashboard-new">
+      <PrescriptionModal
+        show={showPrescriptionModal}
+        onClose={() => setShowPrescriptionModal(false)}
+        prescription={prescriptionData}
+        loading={loadingPrescription}
+      />
       {/* Header */}
       <header className="doctor-header">
         <div className="doctor-logo" onClick={() => navigate('/')}>
@@ -232,7 +448,9 @@ export default function DoctorDashboard() {
         
         <div className="doctor-profile-dropdown">
           <div className="doctor-profile-icon" onClick={() => setShowProfileMenu(!showProfileMenu)}>
-            <span className="doctor-user-avatar">👨‍⚕️</span>
+            <span className="doctor-user-avatar">
+              <DoctorAvatar gender={doctorProfile.gender} size={40} />
+            </span>
             <span className="doctor-user-name-header">{user?.name}</span>
             <span className="doctor-dropdown-arrow">▼</span>
           </div>
@@ -288,31 +506,63 @@ export default function DoctorDashboard() {
                 </div>
               </div>
 
-              <div className="appointments-filters">
-                <button 
-                  className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-                  onClick={() => setFilter('all')}
-                >
-                  All ({appointments.length})
-                </button>
-                <button 
-                  className={`filter-btn ${filter === 'upcoming' ? 'active' : ''}`}
-                  onClick={() => setFilter('upcoming')}
-                >
-                  Upcoming
-                </button>
-                <button 
-                  className={`filter-btn ${filter === 'completed' ? 'active' : ''}`}
-                  onClick={() => setFilter('completed')}
-                >
-                  Completed
-                </button>
-                <button 
-                  className={`filter-btn ${filter === 'cancelled' ? 'active' : ''}`}
-                  onClick={() => setFilter('cancelled')}
-                >
-                  Cancelled
-                </button>
+              <div className="appointments-filters" style={{
+                display: 'flex',
+                gap: '0.5rem',
+                marginBottom: '1.5rem',
+                flexWrap: 'wrap',
+                borderBottom: '2px solid #e5e7eb',
+                paddingBottom: '0.5rem'
+              }}>
+                {[
+                  { key: 'all', label: 'All', icon: '📋', color: '#6b7280' },
+                  { key: 'today', label: 'Today', icon: '📅', color: '#f59e0b' },
+                  { key: 'upcoming', label: 'Upcoming', icon: '🔜', color: '#3b82f6' },
+                  { key: 'completed', label: 'Completed', icon: '✅', color: '#10b981' },
+                  { key: 'cancelled', label: 'Cancelled', icon: '❌', color: '#ef4444' }
+                ].map(filterOption => (
+                  <button
+                    key={filterOption.key}
+                    onClick={() => setFilter(filterOption.key)}
+                    style={{
+                      padding: '0.75rem 1.25rem',
+                      border: filter === filterOption.key ? `2px solid ${filterOption.color}` : '2px solid transparent',
+                      background: filter === filterOption.key ? `${filterOption.color}15` : 'white',
+                      color: filter === filterOption.key ? filterOption.color : '#6b7280',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: filter === filterOption.key ? '600' : '500',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseOver={(e) => {
+                      if (filter !== filterOption.key) {
+                        e.currentTarget.style.background = '#f3f4f6';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (filter !== filterOption.key) {
+                        e.currentTarget.style.background = 'white';
+                      }
+                    }}
+                  >
+                    <span>{filterOption.icon}</span>
+                    <span>{filterOption.label}</span>
+                    <span style={{
+                      background: filter === filterOption.key ? filterOption.color : '#e5e7eb',
+                      color: filter === filterOption.key ? 'white' : '#6b7280',
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600'
+                    }}>
+                      {appointmentCounts[filterOption.key]}
+                    </span>
+                  </button>
+                ))}
               </div>
               
               {loading ? (
@@ -337,7 +587,6 @@ export default function DoctorDashboard() {
                       <div className="doctor-apt-details">
                         <p><strong>Date:</strong> {new Date(apt.appointmentDate).toLocaleDateString()}</p>
                         <p><strong>Time:</strong> {apt.startTime} - {apt.endTime}</p>
-                        <p><strong>Type:</strong> {apt.type || 'General'}</p>
                         <p><strong>Phone:</strong> {apt.patientPhone || 'N/A'}</p>
                       </div>
                       <div className="apt-actions">
@@ -350,9 +599,28 @@ export default function DoctorDashboard() {
                           </button>
                         )}
                         {apt.hasPrescription && (
-                          <div className="prescription-badge">
-                            ✅ Prescription Added
-                          </div>
+                          <>
+                            <div className="prescription-badge">
+                              ✅ Prescription Added
+                            </div>
+                            <button 
+                              className="btn-view-prescription"
+                              onClick={() => handleViewPrescription(apt.prescriptionId)}
+                              style={{
+                                marginTop: '0.5rem',
+                                padding: '0.5rem 1rem',
+                                background: '#dbeafe',
+                                color: '#1e40af',
+                                border: '1px solid #3b82f6',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '0.875rem',
+                                fontWeight: '600'
+                              }}
+                            >
+                              📄 View Prescription
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -365,23 +633,7 @@ export default function DoctorDashboard() {
           {/* Availability View */}
           {activeView === 'availability' && (
             <div className="availability-view">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h1>Availability Schedule</h1>
-                <button 
-                  onClick={() => fetchDoctorSchedule(user.email)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  🔄 Refresh
-                </button>
-              </div>
+              <h1>Availability Schedule</h1>
               
               {scheduleLoaded && (
                 <div style={{
@@ -483,7 +735,7 @@ export default function DoctorDashboard() {
               
               <div className="doctor-profile-display">
                 <div className="doctor-profile-avatar-large">
-                  <span className="doctor-avatar-icon">👨‍⚕️</span>
+                  <DoctorAvatar gender={doctorProfile.gender} size={120} />
                 </div>
                 <div className="doctor-profile-info">
                   <div className="doctor-info-row">
@@ -612,6 +864,7 @@ export default function DoctorDashboard() {
                     <input
                       type="number"
                       min="0"
+                      max="70"
                       value={editForm.experienceYears}
                       onChange={(e) => setEditForm({...editForm, experienceYears: e.target.value})}
                       placeholder="e.g., 5"
@@ -732,7 +985,6 @@ export default function DoctorDashboard() {
                             setActiveView('profile');
                           }, 2000);
                         } catch (err) {
-                          console.error('Error updating profile:', err);
                           setMessage('❌ Server error');
                         } finally {
                           setLoading(false);

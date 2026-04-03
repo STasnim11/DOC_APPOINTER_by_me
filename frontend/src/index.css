@@ -301,3 +301,24 @@ h2 {
 .login-btn:hover {
   background-color: #218838; /* slightly darker green on hover */
 }
+
+/* Modal and UI Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}

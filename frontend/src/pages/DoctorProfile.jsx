@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import '../styles/DoctorProfile.css';
+import DoctorAvatar from '../components/DoctorAvatar';
 
 export default function DoctorProfile() {
   const navigate = useNavigate();
@@ -159,15 +160,18 @@ export default function DoctorProfile() {
       <div className="profile-content">
         {/* Doctor Info Card */}
         <div className="doctor-info-card">
-          <div className="doctor-image-section">
-            <img 
-              src={`https://images.unsplash.com/photo-${doctor.id % 2 === 0 ? '1612349317150-e413f6a5b16d' : '1559839734-2b71ea197ec2'}?w=400&h=400&fit=crop`}
-              alt={doctor.name} 
-              className="doctor-profile-img"
-              onError={(e) => {
-                e.target.src = '/src/assets/default.png';
-              }}
-            />
+          <div className="doctor-image-section" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: doctor.gender === 'Male' 
+              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              : doctor.gender === 'Female'
+              ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+              : 'linear-gradient(135deg, #a8a8a8 0%, #6b6b6b 100%)',
+            borderRadius: '12px'
+          }}>
+            <DoctorAvatar gender={doctor.gender} size={150} />
           </div>
           
           <div className="doctor-details-section">
