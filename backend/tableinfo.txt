@@ -1,5 +1,4 @@
- SELECT table_name 
-FROM user_tables;  2  
+select table_name from user_tables;
 
 TABLE_NAME
 -------------------------
@@ -30,9 +29,212 @@ HOSPITAL_BEDS
 
 24 rows selected.
 
+SQL> SELECT * FROM user_tables;
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+rows will be truncated
+
+
+TABLE_NAME		  TABLESPACE_NAME		 CLUSTER_NAME				  IOT_NAME
+------------------------- ------------------------------ -------------------------------------------------------------------------------------------------------------------------------- --------------
+USERS			  USERS
+ADMIN			  USERS
+DEPARTMENTS		  USERS
+SPECIALIZATION		  USERS
+HOSPITAL_BRANCHES	  USERS
+BEDS			  USERS
+TIME_SLOTS		  USERS
+PATIENT 		  USERS
+DOCTOR			  USERS
+DOC_SPECIALIZATION	  USERS
+DOCTORS_APPOINTMENTS	  USERS
+BED_BOOKING_APPOINTMENTS  USERS
+PRESCRIPTION		  USERS
+PRESCRIBED_MED		  USERS
+BILLS			  USERS
+BILL_RECEPIT		  USERS
+MEDICAL_TECHNICIAN	  USERS
+BRANCH_CONTACTS 	  USERS
+EMERGENCY_CONTACTS	  USERS
+TESTS			  USERS
+LAB_TEST_APPOINTMENTS	  USERS
+MEDICINES		  USERS
+LAB_TESTS		  USERS
+HOSPITAL_BEDS		  USERS
+
+24 rows selected.
+
 SQL> SELECT table_name, column_name, data_type, data_length, nullable
 FROM user_tab_columns
-ORDER BY table_name, column_id;   2    3  
+ORDER BY table_name, column_id;  2    3  
 
 TABLE_NAME		  COLUMN_NAME	       DATA_TYPE					DATA_LENGTH N
 ------------------------- -------------------- -------------------------------------------------------------------------------------------------------------------------------- ----------- -
@@ -79,6 +281,8 @@ DOCTOR			  DEGREES	       VARCHAR2 					200 Y
 DOCTOR			  EXPERIENCE_YEARS     NUMBER						 22 Y
 DOCTOR			  DEPT_ID	       NUMBER						 22 Y
 DOCTOR			  BRANCH_ID	       NUMBER						 22 Y
+DOCTOR			  FEES		       NUMBER						 22 Y
+DOCTOR			  GENDER	       VARCHAR2 					 10 Y
 DOCTORS_APPOINTMENTS	  ID		       NUMBER						 22 N
 DOCTORS_APPOINTMENTS	  PATIENT_ID	       NUMBER						 22 N
 DOCTORS_APPOINTMENTS	  DOCTOR_ID	       NUMBER						 22 N
@@ -86,6 +290,8 @@ DOCTORS_APPOINTMENTS	  APPOINTMENT_DATE     DATE						  7 Y
 DOCTORS_APPOINTMENTS	  TIME_SLOT_ID	       NUMBER						 22 Y
 DOCTORS_APPOINTMENTS	  STATUS	       VARCHAR2 					 50 Y
 DOCTORS_APPOINTMENTS	  TYPE		       VARCHAR2 					 50 Y
+DOCTORS_APPOINTMENTS	  START_TIME	       VARCHAR2 					  5 Y
+DOCTORS_APPOINTMENTS	  END_TIME	       VARCHAR2 					  5 Y
 DOC_SPECIALIZATION	  ID		       NUMBER						 22 N
 DOC_SPECIALIZATION	  DOCTOR_ID	       NUMBER						 22 N
 DOC_SPECIALIZATION	  SPECIALIZATION_ID    NUMBER						 22 N
@@ -126,16 +332,18 @@ LAB_TEST_APPOINTMENTS	  TIME_SLOT_ID	       NUMBER						 22 Y
 LAB_TEST_APPOINTMENTS	  TEST_ID	       NUMBER						 22 N
 LAB_TEST_APPOINTMENTS	  TEST_FILE_URL        VARCHAR2 					255 Y
 MEDICAL_TECHNICIAN	  ID		       NUMBER						 22 N
-MEDICAL_TECHNICIAN	  USER_ID	       NUMBER						 22 N
 MEDICAL_TECHNICIAN	  ADMIN_ID	       NUMBER						 22 N
 MEDICAL_TECHNICIAN	  DEGREES	       VARCHAR2 					200 Y
 MEDICAL_TECHNICIAN	  EXPERIENCE_YEARS     NUMBER						 22 Y
-MEDICAL_TECHNICIAN	  DEPT_ID	       NUMBER						 22 Y
-MEDICAL_TECHNICIAN	  BRANCH_ID	       NUMBER						 22 Y
-MEDICINES		  ID		       NUMBER						 22 N
 
 TABLE_NAME		  COLUMN_NAME	       DATA_TYPE					DATA_LENGTH N
 ------------------------- -------------------- -------------------------------------------------------------------------------------------------------------------------------- ----------- -
+MEDICAL_TECHNICIAN	  DEPT_ID	       NUMBER						 22 Y
+MEDICAL_TECHNICIAN	  BRANCH_ID	       NUMBER						 22 Y
+MEDICAL_TECHNICIAN	  NAME		       VARCHAR2 					100 Y
+MEDICAL_TECHNICIAN	  EMAIL 	       VARCHAR2 					100 Y
+MEDICAL_TECHNICIAN	  PHONE 	       VARCHAR2 					 20 Y
+MEDICINES		  ID		       NUMBER						 22 N
 MEDICINES		  NAME		       VARCHAR2 					200 N
 MEDICINES		  DESCRIPTION	       VARCHAR2 					500 Y
 MEDICINES		  MANUFACTURER	       VARCHAR2 					200 Y
@@ -191,189 +399,212 @@ USERS			  PHONE 	       VARCHAR2 					 20 Y
 USERS			  ROLE		       VARCHAR2 					 50 N
 USERS			  CREATED_AT	       TIMESTAMP(6)					 11 Y
 
-151 rows selected.
+157 rows selected.
 
-SQL> SELECT a.table_name, a.constraint_name, a.constraint_type, b.column_name
+SQL> SELECT a.table_name, b.column_name
 FROM user_constraints a
 JOIN user_cons_columns b
 ON a.constraint_name = b.constraint_name
-ORDER BY a.table_name;   2    3    4    5  
+WHERE a.constraint_type = 'R'
+ORDER BY a.table_name;  2    3    4    5    6  
 
-TABLE_NAME		  CONSTRAINT_NAME							   C COLUMN_NAME
-------------------------- -------------------------------------------------------------------------------------------------------------------------------- - --------------------
-ADMIN			  SYS_C008571								   C ID
-ADMIN			  SYS_C008572								   C USERS_ID
-ADMIN			  FK_ADMIN_BRANCH							   R BRANCH_ID
-ADMIN			  FK_ADMIN_USERS							   R USERS_ID
-ADMIN			  SYS_C008573								   P ID
-BEDS			  SYS_C008594								   P ID
-BEDS			  FK_BEDS_ADMIN 							   R ADMIN_ID
-BEDS			  SYS_C008593								   C ADMIN_ID
-BEDS			  SYS_C008592								   C ID
-BED_BOOKING_APPOINTMENTS  SYS_C008628								   C DOCTOR_APPOINTMENT_I
-BED_BOOKING_APPOINTMENTS  SYS_C008630								   P ID
-BED_BOOKING_APPOINTMENTS  SYS_C008629								   C BED_ID
-BED_BOOKING_APPOINTMENTS  SYS_C008627								   C ID
-BED_BOOKING_APPOINTMENTS  FK_BED_BOOKING_TIMESLOT						   R TIME_SLOT_ID
-BED_BOOKING_APPOINTMENTS  FK_BED_BOOKING_BED							   R BED_ID
-BED_BOOKING_APPOINTMENTS  FK_BED_BOOKING_APP							   R DOCTOR_APPOINTMENT_I
-BILLS			  FK_BILLS_ADMIN							   R ADMIN_ID
-BILLS			  SYS_C008645								   C ADMIN_ID
-BILLS			  SYS_C008646								   P ID
-BILLS			  SYS_C008644								   C ID
-BILL_RECEPIT		  SYS_C008649								   P ID
-BILL_RECEPIT		  SYS_C008648								   C ID
-BIN$SaN99cHaBo7gYwIAEqyFm BIN$SaN99cHXBo7gYwIAEqyFmg==$0					   C TEST_ID
-BIN$SaN99cHaBo7gYwIAEqyFm BIN$SaN99cHYBo7gYwIAEqyFmg==$0					   P ID
-BIN$SaN99cHaBo7gYwIAEqyFm BIN$SaN99cHWBo7gYwIAEqyFmg==$0					   C PATIENT_ID
-BIN$SaN99cHaBo7gYwIAEqyFm BIN$SaN99cHVBo7gYwIAEqyFmg==$0					   C ID
-BIN$Thn2O3O7IMLgYwIAEqwJ7 BIN$Thn2O3O4IMLgYwIAEqwJ7w==$0					   C MEDICINE_NAME
-BIN$Thn2O3O7IMLgYwIAEqwJ7 BIN$Thn2O3O3IMLgYwIAEqwJ7w==$0					   C ID
-BIN$Thn2O3O7IMLgYwIAEqwJ7 BIN$Thn2O3O5IMLgYwIAEqwJ7w==$0					   P ID
-BRANCH_CONTACTS 	  FK_BRANCH_CONTACTS_ADMIN						   R ADMIN_ID
-BRANCH_CONTACTS 	  SYS_C008658								   C ID
-BRANCH_CONTACTS 	  SYS_C008661								   P ID
-BRANCH_CONTACTS 	  SYS_C008660								   C BRANCH_ID
-BRANCH_CONTACTS 	  SYS_C008659								   C ADMIN_ID
-BRANCH_CONTACTS 	  FK_BRANCH_CONTACTS_BRANCH						   R BRANCH_ID
-DEPARTMENTS		  SYS_C008577								   C NAME
-DEPARTMENTS		  SYS_C008575								   C ID
-DEPARTMENTS		  FK_DEPT_ADMIN 							   R ADMIN_ID
-DEPARTMENTS		  SYS_C008578								   P ID
-DOCTOR			  FK_DOCTOR_ADMIN							   R ADMIN_ID
-DOCTOR			  FK_DOCTOR_DEPT							   R DEPT_ID
-DOCTOR			  FK_DOCTOR_USER							   R USER_ID
-DOCTOR			  SYS_C008609								   P ID
-DOCTOR			  FK_DOCTOR_BRANCH							   R BRANCH_ID
-DOCTOR			  SYS_C008606								   C ID
-DOCTOR			  SYS_C008607								   C USER_ID
-DOCTORS_APPOINTMENTS	  FK_DOCTOR_APPOINTMENT_DOCTOR						   R DOCTOR_ID
-DOCTORS_APPOINTMENTS	  FK_DOCTOR_APPOINTMENT_TIMESLOT					   R TIME_SLOT_ID
-DOCTORS_APPOINTMENTS	  FK_DOCTOR_APPOINTMENT_PATIENT 					   R PATIENT_ID
-DOCTORS_APPOINTMENTS	  SYS_C008623								   P ID
-DOCTORS_APPOINTMENTS	  SYS_C008622								   C DOCTOR_ID
-DOCTORS_APPOINTMENTS	  SYS_C008621								   C PATIENT_ID
-DOCTORS_APPOINTMENTS	  SYS_C008620								   C ID
-DOC_SPECIALIZATION	  FK_DOC_SPEC_SPEC							   R SPECIALIZATION_ID
-DOC_SPECIALIZATION	  FK_DOC_SPEC_DOCTOR							   R DOCTOR_ID
-DOC_SPECIALIZATION	  SYS_C008617								   P ID
-DOC_SPECIALIZATION	  SYS_C008616								   C SPECIALIZATION_ID
-DOC_SPECIALIZATION	  SYS_C008615								   C DOCTOR_ID
-DOC_SPECIALIZATION	  SYS_C008614								   C ID
-EMERGENCY_CONTACTS	  SYS_C008664								   C ID
-EMERGENCY_CONTACTS	  FK_EMERGENCY_PATIENT							   R PATIENT_ID
-EMERGENCY_CONTACTS	  SYS_C008666								   P ID
-EMERGENCY_CONTACTS	  SYS_C008665								   C PATIENT_ID
-HOSPITAL_BEDS		  SYS_C008706								   C WARD_NAME
-HOSPITAL_BEDS		  SYS_C008711								   P ID
-HOSPITAL_BEDS		  CHK_BED_PRICE 							   C PRICE_PER_DAY
-HOSPITAL_BEDS		  CHK_BED_STATUS							   C STATUS
-HOSPITAL_BEDS		  SYS_C008704								   C ID
-HOSPITAL_BEDS		  SYS_C008705								   C BED_NUMBER
-HOSPITAL_BEDS		  SYS_C008712								   U BED_NUMBER
-HOSPITAL_BEDS		  SYS_C008707								   C BED_TYPE
-HOSPITAL_BEDS		  SYS_C008708								   C PRICE_PER_DAY
-HOSPITAL_BRANCHES	  FK_BRANCH_ADMIN							   R ADMIN_ID
-HOSPITAL_BRANCHES	  SYS_C008588								   P ID
-HOSPITAL_BRANCHES	  SYS_C008587								   C NAME
-HOSPITAL_BRANCHES	  SYS_C008585								   C ID
-LAB_TESTS		  CHK_LABTEST_DURATION							   C DURATION_MINUTES
-LAB_TESTS		  CHK_LABTEST_PRICE							   C PRICE
-LAB_TESTS		  SYS_C008700								   C PRICE
-LAB_TESTS		  SYS_C008699								   C TEST_NAME
-LAB_TESTS		  SYS_C008698								   C ID
-LAB_TESTS		  SYS_C008703								   P ID
-LAB_TEST_APPOINTMENTS	  FK_LTA_TEST								   R TEST_ID
-LAB_TEST_APPOINTMENTS	  FK_LAB_DOCTOR 							   R DOCTOR_ID
-LAB_TEST_APPOINTMENTS	  FK_LAB_PATIENT							   R PATIENT_ID
-LAB_TEST_APPOINTMENTS	  SYS_C008685								   P ID
-LAB_TEST_APPOINTMENTS	  SYS_C008684								   C TEST_ID
-LAB_TEST_APPOINTMENTS	  SYS_C008683								   C PATIENT_ID
-LAB_TEST_APPOINTMENTS	  SYS_C008682								   C ID
-LAB_TEST_APPOINTMENTS	  FK_LAB_TIMESLOT							   R TIME_SLOT_ID
-MEDICAL_TECHNICIAN	  SYS_C008650								   C ID
-MEDICAL_TECHNICIAN	  SYS_C008651								   C USER_ID
-MEDICAL_TECHNICIAN	  SYS_C008652								   C ADMIN_ID
-MEDICAL_TECHNICIAN	  SYS_C008653								   P ID
-MEDICAL_TECHNICIAN	  FK_TECH_USER								   R USER_ID
-MEDICAL_TECHNICIAN	  FK_TECH_ADMIN 							   R ADMIN_ID
-MEDICAL_TECHNICIAN	  FK_TECH_DEPT								   R DEPT_ID
+TABLE_NAME		  COLUMN_NAME
+------------------------- --------------------
+ADMIN			  USERS_ID
+ADMIN			  BRANCH_ID
+BEDS			  ADMIN_ID
+BED_BOOKING_APPOINTMENTS  DOCTOR_APPOINTMENT_I
+BED_BOOKING_APPOINTMENTS  BED_ID
+BED_BOOKING_APPOINTMENTS  TIME_SLOT_ID
+BILLS			  ADMIN_ID
+BRANCH_CONTACTS 	  BRANCH_ID
+BRANCH_CONTACTS 	  ADMIN_ID
+DEPARTMENTS		  ADMIN_ID
+DOCTOR			  DEPT_ID
+DOCTOR			  BRANCH_ID
+DOCTOR			  USER_ID
+DOCTOR			  ADMIN_ID
+DOCTORS_APPOINTMENTS	  DOCTOR_ID
+DOCTORS_APPOINTMENTS	  TIME_SLOT_ID
+DOCTORS_APPOINTMENTS	  PATIENT_ID
+DOC_SPECIALIZATION	  SPECIALIZATION_ID
+DOC_SPECIALIZATION	  DOCTOR_ID
+EMERGENCY_CONTACTS	  PATIENT_ID
+HOSPITAL_BRANCHES	  ADMIN_ID
+LAB_TEST_APPOINTMENTS	  TEST_ID
+LAB_TEST_APPOINTMENTS	  TIME_SLOT_ID
+LAB_TEST_APPOINTMENTS	  DOCTOR_ID
+LAB_TEST_APPOINTMENTS	  PATIENT_ID
+MEDICAL_TECHNICIAN	  DEPT_ID
+MEDICAL_TECHNICIAN	  BRANCH_ID
+MEDICAL_TECHNICIAN	  ADMIN_ID
+PATIENT 		  USER_ID
+PRESCRIBED_MED		  PRESCRIPTION_ID
+PRESCRIPTION		  APPOINTMENT_ID
+SPECIALIZATION		  ADMIN_ID
+TESTS			  ADMIN_ID
+TESTS			  TECHNICIAN_ID
 
-TABLE_NAME		  CONSTRAINT_NAME							   C COLUMN_NAME
-------------------------- -------------------------------------------------------------------------------------------------------------------------------- - --------------------
-MEDICAL_TECHNICIAN	  FK_TECH_BRANCH							   R BRANCH_ID
-MEDICINES		  SYS_C008692								   C ID
-MEDICINES		  SYS_C008693								   C NAME
-MEDICINES		  SYS_C008694								   C PRICE
-MEDICINES		  CHK_MEDICINE_PRICE							   C PRICE
-MEDICINES		  CHK_MEDICINE_STOCK							   C STOCK_QUANTITY
-MEDICINES		  SYS_C008697								   P ID
-PATIENT 		  SYS_C008602								   C ID
-PATIENT 		  SYS_C008603								   C USER_ID
-PATIENT 		  SYS_C008604								   P ID
-PATIENT 		  FK_PATIENT_USER							   R USER_ID
-PRESCRIBED_MED		  SYS_C008638								   C ID
-PRESCRIBED_MED		  SYS_C008639								   C PRESCRIPTION_ID
-PRESCRIBED_MED		  SYS_C008640								   C MEDICATION_ID
-PRESCRIBED_MED		  FK_PRESCRIBED_PRESCRIPTION						   R PRESCRIPTION_ID
-PRESCRIBED_MED		  SYS_C008641								   P ID
-PRESCRIPTION		  SYS_C008634								   C ID
-PRESCRIPTION		  SYS_C008635								   C APPOINTMENT_ID
-PRESCRIPTION		  FK_PRESCRIPTION_APPOINTMENT						   R APPOINTMENT_ID
-PRESCRIPTION		  SYS_C008636								   P ID
-SPECIALIZATION		  SYS_C008580								   C ID
-SPECIALIZATION		  FK_SPEC_ADMIN 							   R ADMIN_ID
-SPECIALIZATION		  SYS_C008583								   P ID
-SPECIALIZATION		  SYS_C008582								   C NAME
-SPECIALIZATION		  SYS_C008581								   C ADMIN_ID
-TESTS			  FK_TEST_ADM								   R ADMIN_ID
-TESTS			  SYS_C008668								   C ID
-TESTS			  FK_TEST_TECH								   R TECHNICIAN_ID
-TESTS			  SYS_C008669								   P ID
-TIME_SLOTS		  SYS_C008691								   C DOCTOR_ID
-TIME_SLOTS		  SYS_C008599								   C END_TIME
-TIME_SLOTS		  SYS_C008598								   C START_TIME
-TIME_SLOTS		  SYS_C008596								   C ID
-TIME_SLOTS		  SYS_C008600								   P ID
-USERS			  USERS_NAME_EMAIL_UNIQUE						   U EMAIL
-USERS			  SYS_C008569								   P ID
-USERS			  SYS_C008568								   C ROLE
-USERS			  SYS_C008567								   C PASS
-USERS			  SYS_C008566								   C EMAIL
-USERS			  SYS_C008565								   C NAME
-USERS			  SYS_C008564								   C ID
-USERS			  USERS_NAME_EMAIL_UNIQUE						   U NAME
+34 rows selected.
 
-139 rows selected.
+SQL> SELECT a.table_name, b.column_name
+FROM user_constraints a
+JOIN user_cons_columns b
+ON a.constraint_name = b.constraint_name
+WHERE a.constraint_type = 'P'
+ORDER BY a.table_name;  2    3    4    5    6  
 
-SQL>  SELECT table_name, index_name, uniqueness
+TABLE_NAME		  COLUMN_NAME
+------------------------- --------------------
+ADMIN			  ID
+BEDS			  ID
+BED_BOOKING_APPOINTMENTS  ID
+BILLS			  ID
+BILL_RECEPIT		  ID
+BIN$SaN99cHaBo7gYwIAEqyFm ID
+BIN$Thn2O3O7IMLgYwIAEqwJ7 ID
+BRANCH_CONTACTS 	  ID
+DEPARTMENTS		  ID
+DOCTOR			  ID
+DOCTORS_APPOINTMENTS	  ID
+DOC_SPECIALIZATION	  ID
+EMERGENCY_CONTACTS	  ID
+HOSPITAL_BEDS		  ID
+HOSPITAL_BRANCHES	  ID
+LAB_TESTS		  ID
+LAB_TEST_APPOINTMENTS	  ID
+MEDICAL_TECHNICIAN	  ID
+MEDICINES		  ID
+PATIENT 		  ID
+PRESCRIBED_MED		  ID
+PRESCRIPTION		  ID
+SPECIALIZATION		  ID
+TESTS			  ID
+TIME_SLOTS		  ID
+USERS			  ID
+
+26 rows selected.
+
+SQL> SELECT a.table_name, b.column_name
+FROM user_constraints a
+JOIN user_cons_columns b
+ON a.constraint_name = b.constraint_name
+WHERE a.constraint_type = 'U';  2    3    4    5  
+
+TABLE_NAME		  COLUMN_NAME
+------------------------- --------------------
+HOSPITAL_BRANCHES	  NAME
+HOSPITAL_BRANCHES	  ADDRESS
+HOSPITAL_BRANCHES	  ESTABLISHED_DATE
+MEDICAL_TECHNICIAN	  EMAIL
+BRANCH_CONTACTS 	  BRANCH_ID
+BRANCH_CONTACTS 	  CONTACT_NO
+BRANCH_CONTACTS 	  TYPE
+USERS			  NAME
+USERS			  EMAIL
+HOSPITAL_BEDS		  BED_NUMBER
+
+10 rows selected.
+
+SQL> SELECT table_name, search_condition
+FROM user_constraints
+WHERE constraint_type = 'C';  2    3  
+
+TABLE_NAME		  SEARCH_CONDITION
+------------------------- --------------------------------------------------------------------------------
+USERS			  "ID" IS NOT NULL
+USERS			  "NAME" IS NOT NULL
+USERS			  "EMAIL" IS NOT NULL
+USERS			  "PASS" IS NOT NULL
+USERS			  "ROLE" IS NOT NULL
+ADMIN			  "ID" IS NOT NULL
+ADMIN			  "USERS_ID" IS NOT NULL
+DEPARTMENTS		  "ID" IS NOT NULL
+DEPARTMENTS		  "NAME" IS NOT NULL
+SPECIALIZATION		  "ID" IS NOT NULL
+SPECIALIZATION		  "ADMIN_ID" IS NOT NULL
+SPECIALIZATION		  "NAME" IS NOT NULL
+HOSPITAL_BRANCHES	  "ID" IS NOT NULL
+MEDICINES		  "NAME" IS NOT NULL
+HOSPITAL_BRANCHES	  "NAME" IS NOT NULL
+BEDS			  "ID" IS NOT NULL
+BEDS			  "ADMIN_ID" IS NOT NULL
+TIME_SLOTS		  "ID" IS NOT NULL
+MEDICINES		  "ID" IS NOT NULL
+TIME_SLOTS		  "START_TIME" IS NOT NULL
+TIME_SLOTS		  "END_TIME" IS NOT NULL
+MEDICINES		  "PRICE" IS NOT NULL
+PATIENT 		  "ID" IS NOT NULL
+PATIENT 		  "USER_ID" IS NOT NULL
+DOCTOR			  "ID" IS NOT NULL
+DOCTOR			  "USER_ID" IS NOT NULL
+MEDICINES		  price >= 0
+DOC_SPECIALIZATION	  "ID" IS NOT NULL
+DOC_SPECIALIZATION	  "DOCTOR_ID" IS NOT NULL
+DOC_SPECIALIZATION	  "SPECIALIZATION_ID" IS NOT NULL
+DOCTORS_APPOINTMENTS	  "ID" IS NOT NULL
+DOCTORS_APPOINTMENTS	  "PATIENT_ID" IS NOT NULL
+DOCTORS_APPOINTMENTS	  "DOCTOR_ID" IS NOT NULL
+BED_BOOKING_APPOINTMENTS  "ID" IS NOT NULL
+BED_BOOKING_APPOINTMENTS  "DOCTOR_APPOINTMENT_ID" IS NOT NULL
+BED_BOOKING_APPOINTMENTS  "BED_ID" IS NOT NULL
+PRESCRIPTION		  "ID" IS NOT NULL
+PRESCRIPTION		  "APPOINTMENT_ID" IS NOT NULL
+PRESCRIBED_MED		  "ID" IS NOT NULL
+PRESCRIBED_MED		  "PRESCRIPTION_ID" IS NOT NULL
+PRESCRIBED_MED		  "MEDICATION_ID" IS NOT NULL
+MEDICAL_TECHNICIAN	  EXPERIENCE_YEARS >= 0
+BILLS			  "ID" IS NOT NULL
+BILLS			  "ADMIN_ID" IS NOT NULL
+BILL_RECEPIT		  "ID" IS NOT NULL
+MEDICAL_TECHNICIAN	  "ID" IS NOT NULL
+DOCTOR			  FEES >= 0
+MEDICAL_TECHNICIAN	  "ADMIN_ID" IS NOT NULL
+DOCTOR			  GENDER IN ('Male', 'Female')
+BRANCH_CONTACTS 	  "ID" IS NOT NULL
+BRANCH_CONTACTS 	  "ADMIN_ID" IS NOT NULL
+BRANCH_CONTACTS 	  "BRANCH_ID" IS NOT NULL
+EMERGENCY_CONTACTS	  "ID" IS NOT NULL
+EMERGENCY_CONTACTS	  "PATIENT_ID" IS NOT NULL
+TESTS			  "ID" IS NOT NULL
+LAB_TEST_APPOINTMENTS	  "PATIENT_ID" IS NOT NULL
+LAB_TEST_APPOINTMENTS	  "TEST_ID" IS NOT NULL
+BIN$SaN99cHaBo7gYwIAEqyFm "ID" IS NOT NULL
+BIN$SaN99cHaBo7gYwIAEqyFm "PATIENT_ID" IS NOT NULL
+BIN$SaN99cHaBo7gYwIAEqyFm "TEST_ID" IS NOT NULL
+LAB_TEST_APPOINTMENTS	  "ID" IS NOT NULL
+TIME_SLOTS		  "DOCTOR_ID" IS NOT NULL
+MEDICINES		  stock_quantity >= 0
+LAB_TESTS		  "ID" IS NOT NULL
+LAB_TESTS		  "TEST_NAME" IS NOT NULL
+LAB_TESTS		  "PRICE" IS NOT NULL
+LAB_TESTS		  price >= 0
+LAB_TESTS		  duration_minutes >= 0
+HOSPITAL_BEDS		  "ID" IS NOT NULL
+HOSPITAL_BEDS		  "BED_NUMBER" IS NOT NULL
+HOSPITAL_BEDS		  "WARD_NAME" IS NOT NULL
+HOSPITAL_BEDS		  "BED_TYPE" IS NOT NULL
+HOSPITAL_BEDS		  "PRICE_PER_DAY" IS NOT NULL
+HOSPITAL_BEDS		  status IN ('available', 'occupied', 'maintenance')
+HOSPITAL_BEDS		  price_per_day >= 0
+BIN$Thn2O3O7IMLgYwIAEqwJ7 "ID" IS NOT NULL
+BIN$Thn2O3O7IMLgYwIAEqwJ7 "MEDICINE_NAME" IS NOT NULL
+
+77 rows selected.
+
+SQL> SELECT table_name, index_name, uniqueness
 FROM user_indexes;  2  
 
 TABLE_NAME		  INDEX_NAME								   UNIQUENES
 ------------------------- -------------------------------------------------------------------------------------------------------------------------------- ---------
-USERS			  USERS_NAME_EMAIL_UNIQUE						   UNIQUE
-USERS			  SYS_C008569								   UNIQUE
-ADMIN			  SYS_C008573								   UNIQUE
-DEPARTMENTS		  SYS_C008578								   UNIQUE
-SPECIALIZATION		  SYS_C008583								   UNIQUE
-HOSPITAL_BRANCHES	  SYS_C008588								   UNIQUE
-BEDS			  SYS_C008594								   UNIQUE
+DOCTOR			  SYS_C008609								   UNIQUE
 TIME_SLOTS		  SYS_C008600								   UNIQUE
 PATIENT 		  SYS_C008604								   UNIQUE
 PATIENT 		  SYS_IL0000073617C00008$$						   UNIQUE
-DOCTOR			  SYS_C008609								   UNIQUE
-DOC_SPECIALIZATION	  SYS_C008617								   UNIQUE
 DOCTORS_APPOINTMENTS	  SYS_C008623								   UNIQUE
-BED_BOOKING_APPOINTMENTS  SYS_C008630								   UNIQUE
-PRESCRIPTION		  SYS_C008636								   UNIQUE
-PRESCRIBED_MED		  SYS_C008641								   UNIQUE
-BILLS			  SYS_C008646								   UNIQUE
-BILL_RECEPIT		  SYS_C008649								   UNIQUE
-MEDICAL_TECHNICIAN	  SYS_C008653								   UNIQUE
+HOSPITAL_BRANCHES	  SYS_C008588								   UNIQUE
 BRANCH_CONTACTS 	  SYS_C008661								   UNIQUE
-EMERGENCY_CONTACTS	  SYS_C008666								   UNIQUE
-TESTS			  SYS_C008669								   UNIQUE
-LAB_TEST_APPOINTMENTS	  SYS_C008685								   UNIQUE
+BRANCH_CONTACTS 	  UK_BRANCH_CONTACT_UNIQUE						   UNIQUE
 MEDICINES		  IDX_MEDICINES_CATEGORY						   NONUNIQUE
 MEDICINES		  IDX_MEDICINES_NAME							   NONUNIQUE
 MEDICINES		  SYS_C008697								   UNIQUE
@@ -381,11 +612,29 @@ LAB_TESTS		  IDX_LABTESTS_DEPT							   NONUNIQUE
 LAB_TESTS		  IDX_LABTESTS_NAME							   NONUNIQUE
 LAB_TESTS		  SYS_C008703								   UNIQUE
 HOSPITAL_BEDS		  IDX_BEDS_TYPE 							   NONUNIQUE
+DEPARTMENTS		  SYS_C008578								   UNIQUE
+USERS			  USERS_NAME_EMAIL_UNIQUE						   UNIQUE
+USERS			  SYS_C008569								   UNIQUE
 HOSPITAL_BEDS		  IDX_BEDS_STATUS							   NONUNIQUE
 HOSPITAL_BEDS		  IDX_BEDS_WARD 							   NONUNIQUE
 HOSPITAL_BEDS		  SYS_C008712								   UNIQUE
 HOSPITAL_BEDS		  SYS_C008711								   UNIQUE
+PRESCRIPTION		  SYS_C008636								   UNIQUE
+SPECIALIZATION		  SYS_C008583								   UNIQUE
+ADMIN			  SYS_C008573								   UNIQUE
+MEDICAL_TECHNICIAN	  SYS_C008653								   UNIQUE
+HOSPITAL_BRANCHES	  UK_BRANCH_UNIQUE							   UNIQUE
+MEDICAL_TECHNICIAN	  UK_MED_TECH_EMAIL							   UNIQUE
+DOC_SPECIALIZATION	  SYS_C008617								   UNIQUE
+PRESCRIBED_MED		  SYS_C008641								   UNIQUE
+BEDS			  SYS_C008594								   UNIQUE
+BED_BOOKING_APPOINTMENTS  SYS_C008630								   UNIQUE
+BILLS			  SYS_C008646								   UNIQUE
+BILL_RECEPIT		  SYS_C008649								   UNIQUE
+EMERGENCY_CONTACTS	  SYS_C008666								   UNIQUE
+TESTS			  SYS_C008669								   UNIQUE
+LAB_TEST_APPOINTMENTS	  SYS_C008685								   UNIQUE
 
-34 rows selected.
+37 rows selected.
 
 SQL> 

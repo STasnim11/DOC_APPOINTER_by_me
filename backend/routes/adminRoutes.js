@@ -68,6 +68,11 @@ router.post('/lab-tests', labTestController.addLabTest);
 router.put('/lab-tests/:id', labTestController.updateLabTest);
 router.delete('/lab-tests/:id', labTestController.deleteLabTest);
 
+// Lab Test Appointments Routes
+router.get('/lab-test-appointments', labTestController.getAllLabTestAppointments);
+router.put('/lab-test-appointments/:id', labTestController.updateLabTestAppointment);
+router.delete('/lab-test-appointments/:id', labTestController.deleteLabTestAppointment);
+
 router.get('/medicines', medicineController.getAllMedicines);
 router.post('/medicines', medicineController.addMedicine);
 router.put('/medicines/:id', medicineController.updateMedicine);

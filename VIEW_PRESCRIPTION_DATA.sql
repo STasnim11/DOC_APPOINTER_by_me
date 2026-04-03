@@ -1,0 +1,112 @@
+-- SQL Script to View Prescription Data Properly
+-- Run this to see all prescription fields without truncation
+
+-- Set display settings
+SET LINESIZE 200
+SET PAGESIZE 100
+COLUMN ID FORMAT 999
+COLUMN APPOINTMENT_ID FORMAT 999
+COLUMN DATE_ISSUED FORMAT A12
+COLUMN CHIEF_COMPLAINTS FORMAT A40
+COLUMN INVESTIGATIONS FORMAT A40
+COLUMN REQUIRED_TESTS FORMAT A30
+COLUMN DIAGNOSIS FORMAT A40
+COLUMN HISTORY FORMAT A40
+COLUMN INSTRUCTIONS FORMAT A40
+COLUMN VISIT_AGAIN_AT FORMAT A12
+
+-- View all prescriptions with formatted columns
+SELECT 
+    ID,
+    APPOINTMENT_ID,
+    TO_CHAR(DATE_ISSUED, 'DD-MON-YYYY') as DATE_ISSUED,
+    CHIEF_COMPLAINTS,
+    INVESTIGATIONS,
+    REQUIRED_TESTS,
+    DIAGNOSIS,
+    HISTORY,
+    INSTRUCTIONS,
+    TO_CHAR(VISIT_AGAIN_AT, 'DD-MON-YYYY') as VISIT_AGAIN_AT
+FROM PRESCRIPTION
+ORDER BY ID DESC;
+
+-- View prescription with medicines for a specific prescription ID
+-- Replace 34 with your prescription ID
+PROMPT
+PROMPT ========== Prescription Details for ID 34 ==========
+PROMPT
+
+SELECT 
+    p.ID as PRESCRIPTION_ID,
+    p.APPOINTMENT_ID,
+    TO_CHAR(p.DATE_ISSUED, 'DD-MON-YYYY HH24:MI') as DATE_ISSUED,
+    p.CHIEF_COMPLAINTS,
+    p.DIAGNOSIS,
+    p.INSTRUCTIONS,
+    TO_CHAR(p.VISIT_AGAIN_AT, 'DD-MON-YYYY') as FOLLOW_UP
+FROM PRESCRIPTION p
+WHERE p.ID = 34;
+
+PROMPT
+PROMPT ========== Prescribed Medicines ==========
+PROMPT
+
+SELECT 
+    m.NAME as MEDICINE_NAME,
+    pm.DOSAGE,
+    pm.DURATION,
+    m.MANUFACTURER,
+    m.CATEGORY
+FROM PRESCRIBED_MED pm
+JOIN MEDICINES m ON pm.MEDICATION_ID = m.ID
+WHERE pm.PRESCRIPTION_ID = 34;
+
+-- View all prescriptions with patient and doctor names
+PROMPT
+PROMPT ========== All Prescriptions with Patient & Doctor Info ==========
+PROMPT
+
+SELECT 
+    p.ID,
+    pu.NAME as PATIENT,
+    du.NAME as DOCTOR,
+    TO_CHAR(p.DATE_ISSUED, 'DD-MON-YY') as DATE,
+    p.DIAGNOSIS,
+    da.STATUS as APT_STATUS
+FROM PRESCRIPTION p
+JOIN DOCTORS_APPOINTMENTS da ON p.APPOINTMENT_ID = da.ID
+JOIN PATIENT pat ON da.PATIENT_ID = pat.ID
+JOIN USERS pu ON pat.USER_ID = pu.ID
+JOIN DOCTOR doc ON da.DOCTOR_ID = doc.ID
+JOIN USERS du ON doc.USER_ID = du.ID
+ORDER BY p.ID DESC;
+
+-- Count medicines per prescription
+PROMPT
+PROMPT ========== Medicine Count per Prescription ==========
+PROMPT
+
+SELECT 
+    p.ID as PRESCRIPTION_ID,
+    COUNT(pm.MEDICATION_ID) as MEDICINE_COUNT,
+    p.DIAGNOSIS
+FROM PRESCRIPTION p
+LEFT JOIN PRESCRIBED_MED pm ON p.ID = pm.PRESCRIPTION_ID
+GROUP BY p.ID, p.DIAGNOSIS
+ORDER BY p.ID DESC;
+
+-- Find prescriptions without medicines
+PROMPT
+PROMPT ========== Prescriptions Without Medicines ==========
+PROMPT
+
+SELECT 
+    p.ID,
+    p.APPOINTMENT_ID,
+    p.DIAGNOSIS,
+    TO_CHAR(p.DATE_ISSUED, 'DD-MON-YYYY') as DATE_ISSUED
+FROM PRESCRIPTION p
+WHERE NOT EXISTS (
+    SELECT 1 FROM PRESCRIBED_MED pm 
+    WHERE pm.PRESCRIPTION_ID = p.ID
+);

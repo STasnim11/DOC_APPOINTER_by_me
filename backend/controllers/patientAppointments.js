@@ -11,6 +11,8 @@ const formatAppointments = (rows) => {
     doctorName: row[6],
     doctorEmail: row[7],
     slot: `${row[4]} - ${row[5]}`,
+    hasPrescription: row[8] ? true : false,
+    prescriptionId: row[8]
   }));
 };
 
@@ -53,6 +55,7 @@ exports.getPatientAppointmentsByEmail = async (req, res) => {
     const patientId = patientResult.rows[0][0];
 
     // Get appointments using stored times (no need to join TIME_SLOTS)
+    // Also get prescription info
     const appointmentResult = await connection.execute(
       `SELECT
           da.ID,
@@ -62,12 +65,15 @@ exports.getPatientAppointmentsByEmail = async (req, res) => {
           da.START_TIME,
           da.END_TIME,
           du.NAME,
-          du.EMAIL
+          du.EMAIL,
+          p.ID as PRESCRIPTION_ID
        FROM DOCTORS_APPOINTMENTS da
        JOIN DOCTOR d
          ON da.DOCTOR_ID = d.ID
        JOIN USERS du
          ON d.USER_ID = du.ID
+       LEFT JOIN PRESCRIPTION p
+         ON da.ID = p.APPOINTMENT_ID
        WHERE da.PATIENT_ID = :patientId
        ORDER BY da.APPOINTMENT_DATE DESC, da.START_TIME ASC`,
       { patientId }

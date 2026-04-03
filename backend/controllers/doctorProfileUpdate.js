@@ -534,9 +534,9 @@ exports.updateDoctorLicense = async (req, res) => {
 // };
 
 
-// Update doctor basic info (degrees, experience, fees, gender) - simplified version
+// Update doctor basic info (degrees, experience, fees, gender, specialization)
 exports.updateDoctorBasicInfo = async (req, res) => {
-  const { email, degrees, experienceYears, fees, gender } = req.body;
+  const { email, degrees, experienceYears, fees, gender, specializationId } = req.body;
   let connection;
 
   if (!email) {
@@ -566,7 +566,7 @@ exports.updateDoctorBasicInfo = async (req, res) => {
 
     const doctorId = result.rows[0][0];
 
-    // Build dynamic update query
+    // Build dynamic update query for DOCTOR table
     const updates = [];
     const params = { doctorId };
 
@@ -587,19 +587,46 @@ exports.updateDoctorBasicInfo = async (req, res) => {
       params.gender = gender;
     }
 
-    if (updates.length === 0) {
-      return res.status(400).json({
-        error: "❌ No fields to update",
-      });
+    // Update DOCTOR table if there are fields to update
+    if (updates.length > 0) {
+      console.log('Updating doctor with:', params);
+      console.log('Update query:', `UPDATE DOCTOR SET ${updates.join(', ')} WHERE ID = :doctorId`);
+
+      await connection.execute(
+        `UPDATE DOCTOR SET ${updates.join(', ')} WHERE ID = :doctorId`,
+        params
+      );
     }
 
-    console.log('Updating doctor with:', params);
-    console.log('Update query:', `UPDATE DOCTOR SET ${updates.join(', ')} WHERE ID = :doctorId`);
+    // Handle specialization update in DOC_SPECIALIZATION table
+    if (specializationId !== undefined && specializationId !== null && specializationId !== '') {
+      console.log('Updating specialization to:', specializationId);
+      
+      // Check if specialization entry exists
+      const specCheck = await connection.execute(
+        `SELECT ID FROM DOC_SPECIALIZATION WHERE DOCTOR_ID = :doctorId`,
+        { doctorId }
+      );
 
-    await connection.execute(
-      `UPDATE DOCTOR SET ${updates.join(', ')} WHERE ID = :doctorId`,
-      params
-    );
+      if (specCheck.rows.length > 0) {
+        // Update existing specialization
+        await connection.execute(
+          `UPDATE DOC_SPECIALIZATION 
+           SET SPECIALIZATION_ID = :specializationId 
+           WHERE DOCTOR_ID = :doctorId`,
+          { specializationId, doctorId }
+        );
+        console.log('Specialization updated');
+      } else {
+        // Insert new specialization
+        await connection.execute(
+          `INSERT INTO DOC_SPECIALIZATION (DOCTOR_ID, SPECIALIZATION_ID) 
+           VALUES (:doctorId, :specializationId)`,
+          { doctorId, specializationId }
+        );
+        console.log('Specialization inserted');
+      }
+    }
 
     await connection.commit();
 

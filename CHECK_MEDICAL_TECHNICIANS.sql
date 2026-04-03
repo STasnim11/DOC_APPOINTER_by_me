@@ -1,0 +1,18 @@
+-- Check if MEDICAL_TECHNICIAN table has data
+SELECT COUNT(*) as TOTAL_TECHNICIANS FROM MEDICAL_TECHNICIAN;
+
+-- Show all existing medical technicians
+SELECT 
+    ID,
+    NAME,
+    EMAIL,
+    PHONE,
+    DEGREES,
+    EXPERIENCE_YEARS,
+    DEPT_ID,
+    BRANCH_ID
+FROM MEDICAL_TECHNICIAN
+ORDER BY ID;
+
+-- Check table structure
+DESC MEDICAL_TECHNICIAN;

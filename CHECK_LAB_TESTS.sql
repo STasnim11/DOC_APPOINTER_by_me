@@ -1,0 +1,16 @@
+-- Check if LAB_TESTS table has data
+SELECT COUNT(*) as TOTAL_LAB_TESTS FROM LAB_TESTS;
+
+-- Show all existing lab tests
+SELECT 
+    ID,
+    TEST_NAME,
+    PRICE,
+    DEPARTMENT,
+    PREPARATION_REQUIRED,
+    DURATION_MINUTES
+FROM LAB_TESTS
+ORDER BY ID;
+
+-- Check LAB_TESTS table structure
+DESC LAB_TESTS;

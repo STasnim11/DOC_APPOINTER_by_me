@@ -12,6 +12,8 @@ app.use(express.json());
 const authRoutes = require('./routes/auth');
 const doctorRoutes = require('./routes/doctorRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
+const labTestRoutes = require('./routes/labTestRoutes');
+const bedBookingRoutes = require('./routes/bedBookingRoutes');
 
 let adminRoutes;
 try {
@@ -25,6 +27,8 @@ try {
 app.use('/api', authRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api', labTestRoutes);
+app.use('/api', bedBookingRoutes);
 if (adminRoutes) {
   app.use('/api/admin', adminRoutes);
   console.log('✅ Admin routes mounted at /api/admin');
