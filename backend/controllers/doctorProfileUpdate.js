@@ -91,12 +91,11 @@ exports.getDoctorProfile = async (req, res) => {
       }
     }
 
-    // Get appointments
+    // Get appointments using stored times (no need to join TIME_SLOTS)
     const appointmentsResult = await connection.execute(
       `SELECT da.ID, da.APPOINTMENT_DATE, da.STATUS, da.TYPE,
-              ts.START_TIME, ts.END_TIME, pu.NAME as PATIENT_NAME, pu.PHONE as PATIENT_PHONE, pu.EMAIL as PATIENT_EMAIL
+              da.START_TIME, da.END_TIME, pu.NAME as PATIENT_NAME, pu.PHONE as PATIENT_PHONE, pu.EMAIL as PATIENT_EMAIL
        FROM DOCTORS_APPOINTMENTS da
-       LEFT JOIN TIME_SLOTS ts ON da.TIME_SLOT_ID = ts.ID
        JOIN PATIENT p ON da.PATIENT_ID = p.ID
        JOIN USERS pu ON p.USER_ID = pu.ID
        WHERE da.DOCTOR_ID = :doctorId

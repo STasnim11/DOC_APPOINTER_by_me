@@ -32,25 +32,25 @@ exports.getDoctorAppointments = async (req, res) => {
     const doctorId = doctorResult.rows[0][0];
 
     // Get all appointments with patient details and prescription status
+    // Using stored times (no need to join TIME_SLOTS)
     const appointmentsResult = await connection.execute(
       `SELECT
           da.ID as APPOINTMENT_ID,
           da.APPOINTMENT_DATE,
           da.STATUS,
           da.TYPE,
-          ts.START_TIME,
-          ts.END_TIME,
+          da.START_TIME,
+          da.END_TIME,
           pu.NAME as PATIENT_NAME,
           pu.EMAIL as PATIENT_EMAIL,
           pu.PHONE as PATIENT_PHONE,
           p.ID as PRESCRIPTION_ID
        FROM DOCTORS_APPOINTMENTS da
-       LEFT JOIN TIME_SLOTS ts ON da.TIME_SLOT_ID = ts.ID
        JOIN PATIENT pat ON da.PATIENT_ID = pat.ID
        JOIN USERS pu ON pat.USER_ID = pu.ID
        LEFT JOIN PRESCRIPTION p ON da.ID = p.APPOINTMENT_ID
        WHERE da.DOCTOR_ID = :doctorId
-       ORDER BY da.APPOINTMENT_DATE DESC, ts.START_TIME DESC`,
+       ORDER BY da.APPOINTMENT_DATE DESC, da.START_TIME DESC`,
       { doctorId }
     );
 

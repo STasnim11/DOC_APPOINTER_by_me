@@ -52,25 +52,24 @@ exports.getPatientAppointmentsByEmail = async (req, res) => {
 
     const patientId = patientResult.rows[0][0];
 
+    // Get appointments using stored times (no need to join TIME_SLOTS)
     const appointmentResult = await connection.execute(
       `SELECT
           da.ID,
           da.APPOINTMENT_DATE,
           da.STATUS,
           da.TYPE,
-          ts.START_TIME,
-          ts.END_TIME,
+          da.START_TIME,
+          da.END_TIME,
           du.NAME,
           du.EMAIL
        FROM DOCTORS_APPOINTMENTS da
-       LEFT JOIN TIME_SLOTS ts
-         ON da.TIME_SLOT_ID = ts.ID
        JOIN DOCTOR d
          ON da.DOCTOR_ID = d.ID
        JOIN USERS du
          ON d.USER_ID = du.ID
        WHERE da.PATIENT_ID = :patientId
-       ORDER BY da.APPOINTMENT_DATE DESC, ts.START_TIME ASC`,
+       ORDER BY da.APPOINTMENT_DATE DESC, da.START_TIME ASC`,
       { patientId }
     );
 

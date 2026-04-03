@@ -104,7 +104,7 @@ exports.bookAppointment = async (req, res) => {
     const patientId = patientResult.rows[0][0];
 
     const slotResult = await connection.execute(
-      `SELECT ID, DOCTOR_ID, STATUS
+      `SELECT ID, DOCTOR_ID, STATUS, START_TIME, END_TIME
        FROM TIME_SLOTS
        WHERE ID = :timeSlotId
          AND DOCTOR_ID = :doctorId
@@ -115,6 +115,9 @@ exports.bookAppointment = async (req, res) => {
     if (slotResult.rows.length === 0) {
       return res.status(404).json({ error: "❌ Selected time slot not found for this doctor" });
     }
+
+    const startTime = slotResult.rows[0][3];
+    const endTime = slotResult.rows[0][4];
 
     const existingResult = await connection.execute(
       `SELECT ID
@@ -130,21 +133,14 @@ exports.bookAppointment = async (req, res) => {
       return res.status(409).json({ error: "❌ This slot is already booked" });
     }
 
+    // Insert appointment with times stored directly in the appointment record
     await connection.execute(
       `INSERT INTO DOCTORS_APPOINTMENTS
-        (PATIENT_ID, DOCTOR_ID, APPOINTMENT_DATE, TIME_SLOT_ID, STATUS, TYPE)
+        (PATIENT_ID, DOCTOR_ID, APPOINTMENT_DATE, TIME_SLOT_ID, STATUS, TYPE, START_TIME, END_TIME)
        VALUES
-        (:patientId, :doctorId, TO_DATE(:appointmentDate, 'YYYY-MM-DD'), :timeSlotId, :status, :type)`,
-      {
-        patientId,
-        doctorId,
-        appointmentDate,
-        timeSlotId,
-        status: "BOOKED",
-        type: type || "General"
-      }
+        (:patientId, :doctorId, TO_DATE(:appointmentDate, 'YYYY-MM-DD'), :timeSlotId, :status, :type, :startTime, :endTime)`,
+      { patientId, doctorId, appointmentDate, timeSlotId, status: "BOOKED", type: type || "General", startTime, endTime }
     );
-
     await connection.commit();
 
     return res.status(201).json({
