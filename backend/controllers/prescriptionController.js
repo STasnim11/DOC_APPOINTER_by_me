@@ -169,6 +169,24 @@ exports.createPrescription = async (req, res) => {
           }
         );
         console.log(`✅ Medicine inserted: ${medicineName}`);
+
+        // ✅ USE STORED PROCEDURE: sp_update_medicine_stock
+        // Update medicine stock after prescription (assuming 1 unit per prescription)
+        try {
+          await connection.execute(
+            `BEGIN
+               sp_update_medicine_stock(:medicationId, :quantity);
+             END;`,
+            {
+              medicationId: medicineId,
+              quantity: 1 // Deduct 1 unit
+            }
+          );
+          console.log(`✅ Medicine stock updated for ${medicineName} (via stored procedure)`);
+        } catch (stockError) {
+          console.log(`⚠️ Stock update warning for ${medicineName}:`, stockError.message);
+          // Continue even if stock update fails (medicine might be out of stock)
+        }
       }
     } else {
       console.log('⚠️ No medicines to insert');

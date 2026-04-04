@@ -1004,7 +1004,7 @@ exports.saveDoctorSchedule = async (req, res) => {
     console.log("Doctor schedule saved successfully -", totalSlotsCreated, "slots created");
 
     return res.status(200).json({
-      message: `✅ Doctor schedule saved successfully! Created ${totalSlotsCreated} appointment slots.`,
+      message: `Availability schedule updated successfully. ${totalSlotsCreated} appointment slots created.`,
       slotsCreated: totalSlotsCreated
     });
 

@@ -3,10 +3,12 @@ const connectDB = require('../db/connection');
 // Use Function: Get doctor appointment count
 exports.getDoctorAppointmentCount = async (req, res) => {
   const { doctorId } = req.params;
+  console.log('🔧 getDoctorAppointmentCount called with doctorId:', doctorId);
   let connection;
   
   try {
     connection = await connectDB();
+    console.log('📊 Executing SQL function: fn_get_doctor_appointment_count');
     
     const result = await connection.execute(
       `SELECT fn_get_doctor_appointment_count(:doctorId) as APPOINTMENT_COUNT FROM DUAL`,
@@ -14,30 +16,33 @@ exports.getDoctorAppointmentCount = async (req, res) => {
     );
 
     const count = result.rows[0][0];
+    console.log('✅ Function returned count:', count);
     res.status(200).json({ doctorId, appointmentCount: count });
   } catch (err) {
-    console.error('Error getting appointment count:', err);
+    console.error('❌ Error getting appointment count:', err);
     res.status(500).json({ error: 'Failed to get appointment count' });
   } finally {
     if (connection) await connection.close();
   }
 };
 
-// Use Function: Calculate bed occupancy rate
+// Use Function: Calculate bed occupancy rate (by ward or overall)
 exports.getBedOccupancyRate = async (req, res) => {
-  const { branchId } = req.params;
+  const { wardName } = req.params;
   let connection;
   
   try {
     connection = await connectDB();
     
     const result = await connection.execute(
-      `SELECT fn_calculate_bed_occupancy(:branchId) as OCCUPANCY_RATE FROM DUAL`,
-      { branchId }
+      wardName 
+        ? `SELECT fn_calculate_bed_occupancy(:wardName) as OCCUPANCY_RATE FROM DUAL`
+        : `SELECT fn_calculate_bed_occupancy(NULL) as OCCUPANCY_RATE FROM DUAL`,
+      wardName ? { wardName } : {}
     );
 
     const rate = result.rows[0][0];
-    res.status(200).json({ branchId, occupancyRate: rate });
+    res.status(200).json({ wardName: wardName || 'Overall', occupancyRate: rate });
   } catch (err) {
     console.error('Error calculating bed occupancy:', err);
     res.status(500).json({ error: 'Failed to calculate bed occupancy' });
@@ -192,17 +197,16 @@ exports.getDatabaseFeaturesStats = async (req, res) => {
       appointmentCount: row[2]
     }));
 
-    // Get all branches with bed occupancy
-    const branchesResult = await connection.execute(
-      `SELECT hb.ID, hb.NAME, fn_calculate_bed_occupancy(hb.ID) as OCCUPANCY_RATE
-       FROM HOSPITAL_BRANCHES hb
+    // Get all wards with bed occupancy
+    const wardsResult = await connection.execute(
+      `SELECT DISTINCT WARD_NAME, fn_calculate_bed_occupancy(WARD_NAME) as OCCUPANCY_RATE
+       FROM HOSPITAL_BEDS
        ORDER BY OCCUPANCY_RATE DESC`
     );
 
-    const branches = branchesResult.rows.map(row => ({
-      branchId: row[0],
-      branchName: row[1],
-      occupancyRate: row[2]
+    const wards = wardsResult.rows.map(row => ({
+      wardName: row[0],
+      occupancyRate: row[1]
     }));
 
     // Get all patients with total expenses
@@ -223,7 +227,7 @@ exports.getDatabaseFeaturesStats = async (req, res) => {
 
     res.status(200).json({
       doctors,
-      branches,
+      wards,
       patients
     });
   } catch (err) {

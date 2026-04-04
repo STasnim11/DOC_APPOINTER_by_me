@@ -184,15 +184,17 @@ if (!hasPrescription) {
   });
 }
 
+// Update appointment status to COMPLETED
 await connection.execute(
   `UPDATE DOCTORS_APPOINTMENTS SET STATUS = 'COMPLETED' WHERE ID = :id`,
   { id }
 );
-    await connection.commit();
 
-    return res.status(200).json({
-      message: "✅ Appointment marked as completed"
-    });
+await connection.commit();
+
+return res.status(200).json({
+  message: "Appointment marked as completed"
+});
   } catch (error) {
     console.error("Error completing appointment:", error);
 

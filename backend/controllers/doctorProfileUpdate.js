@@ -117,8 +117,10 @@ exports.getDoctorProfile = async (req, res) => {
 
     console.log('=== RESPONSE SENT ===');
     console.log('License in response:', license);
+    console.log('Doctor ID in response:', doctorId);
 
     return res.status(200).json({
+      doctorId,  // ← ADDED THIS!
       name,
       email: userEmail,
       phone,
@@ -394,7 +396,7 @@ exports.updateDoctorLicense = async (req, res) => {
     await connection.commit();
 
     return res.status(200).json({
-      message: "✅ License number verified and saved successfully",
+      message: "License number updated successfully",
     });
   } catch (error) {
     console.error("Update license error:", error);

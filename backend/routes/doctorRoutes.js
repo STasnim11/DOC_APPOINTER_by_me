@@ -10,6 +10,7 @@ const {
   getAllSpecializations,
   createTimeSlots,
 } = require("../controllers/doctorSpecialization"); // ✅ singular, matches your file
+const databaseFeaturesController = require("../controllers/databaseFeaturesController");
 
 /**
  * ===============================
@@ -19,6 +20,9 @@ const {
 
 // GET doctor profile by email
 router.get("/profile/:email", doctorProfileController.getDoctorProfile);
+
+// GET total appointment count for doctor (uses SQL function)
+router.get("/appointment-count/:doctorId", databaseFeaturesController.getDoctorAppointmentCount);
 
 // POST — Create new doctor profile
 router.post("/profile/create", createDoctorProfile);

@@ -1,4 +1,5 @@
 const connectDB = require("../db/connection");
+const oracledb = require('oracledb');
 
 const getDayName = (dateString) => {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -78,6 +79,7 @@ exports.bookAppointment = async (req, res) => {
   try {
     connection = await connectDB();
 
+    // Get patient ID from email
     const userResult = await connection.execute(
       `SELECT ID
        FROM USERS
@@ -103,48 +105,49 @@ exports.bookAppointment = async (req, res) => {
 
     const patientId = patientResult.rows[0][0];
 
-    const slotResult = await connection.execute(
-      `SELECT ID, DOCTOR_ID, STATUS, START_TIME, END_TIME
-       FROM TIME_SLOTS
-       WHERE ID = :timeSlotId
-         AND DOCTOR_ID = :doctorId
-         AND STATUS = 'AVAILABLE'`,
-      { timeSlotId, doctorId }
+    console.log('🔧 ========== USING STORED PROCEDURE ==========');
+    console.log('📝 Calling: sp_book_appointment');
+    console.log('📝 Parameters:', { 
+      patientId, 
+      doctorId, 
+      appointmentDate, 
+      timeSlotId, 
+      type: type || 'General' 
+    });
+
+    // ✅ USE STORED PROCEDURE: sp_book_appointment
+    // This procedure validates doctor availability and time slot
+    const result = await connection.execute(
+      `BEGIN
+         sp_book_appointment(
+           :patientId, 
+           :doctorId, 
+           TO_DATE(:appointmentDate, 'YYYY-MM-DD'),
+           :timeSlotId, 
+           :appointmentType, 
+           :appointmentId
+         );
+       END;`,
+      {
+        patientId,
+        doctorId,
+        appointmentDate,
+        timeSlotId,
+        appointmentType: type || 'General',
+        appointmentId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+      }
     );
 
-    if (slotResult.rows.length === 0) {
-      return res.status(404).json({ error: "❌ Selected time slot not found for this doctor" });
-    }
-
-    const startTime = slotResult.rows[0][3];
-    const endTime = slotResult.rows[0][4];
-
-    const existingResult = await connection.execute(
-      `SELECT ID
-       FROM DOCTORS_APPOINTMENTS
-       WHERE DOCTOR_ID = :doctorId
-         AND APPOINTMENT_DATE = TO_DATE(:appointmentDate, 'YYYY-MM-DD')
-         AND TIME_SLOT_ID = :timeSlotId
-         AND STATUS = 'BOOKED'`,
-      { doctorId, appointmentDate, timeSlotId }
-    );
-
-    if (existingResult.rows.length > 0) {
-      return res.status(409).json({ error: "❌ This slot is already booked" });
-    }
-
-    // Insert appointment with times stored directly in the appointment record
-    await connection.execute(
-      `INSERT INTO DOCTORS_APPOINTMENTS
-        (PATIENT_ID, DOCTOR_ID, APPOINTMENT_DATE, TIME_SLOT_ID, STATUS, TYPE, START_TIME, END_TIME)
-       VALUES
-        (:patientId, :doctorId, TO_DATE(:appointmentDate, 'YYYY-MM-DD'), :timeSlotId, :status, :type, :startTime, :endTime)`,
-      { patientId, doctorId, appointmentDate, timeSlotId, status: "BOOKED", type: type || "General", startTime, endTime }
-    );
     await connection.commit();
 
+    const appointmentId = result.outBinds.appointmentId;
+
+    console.log('✅ PROCEDURE SUCCESS! Appointment ID:', appointmentId);
+    console.log('🔧 ========================================');
+
     return res.status(201).json({
-      message: "✅ Appointment booked successfully"
+      message: "✅ Appointment booked successfully (via stored procedure)",
+      appointmentId
     });
   } catch (err) {
     console.error("Book appointment error:", err);
@@ -155,7 +158,15 @@ exports.bookAppointment = async (req, res) => {
       } catch (_) {}
     }
 
-    return res.status(500).json({ error: "❌ Failed to book appointment" });
+    // Handle specific procedure errors
+    if (err.message && err.message.includes('already booked')) {
+      return res.status(409).json({ error: "❌ This slot is already booked" });
+    }
+    if (err.message && err.message.includes('not available')) {
+      return res.status(404).json({ error: "❌ Selected time slot not available" });
+    }
+
+    return res.status(500).json({ error: "❌ Failed to book appointment: " + err.message });
   } finally {
     if (connection) await connection.close();
   }

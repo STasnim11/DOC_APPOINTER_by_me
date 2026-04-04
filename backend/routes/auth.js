@@ -8,13 +8,17 @@ const appointmentController = require("../controllers/appointmentController");
 const patientAppointmentsController = require("../controllers/patientAppointments");
 const doctorAppointmentsController = require("../controllers/doctorAppointments");
 const doctorProfileController = require("../controllers/doctorProfileUpdate");
-const { saveDoctorSpecialization } = require("../controllers/doctorSpecialization"); // Afnan
-const doctorRoutes = require("./doctorRoutes");//Afnan
+const { saveDoctorSpecialization } = require("../controllers/doctorSpecialization");
+const doctorRoutes = require("./doctorRoutes");
 const patientProfileUpdate = require("../controllers/patientProfileUpdate");
-const { authenticateToken, requirePatient } = require("../middleware/auth");
+const { authenticateToken, requirePatient, requireDoctor } = require("../middleware/auth");
 
 
 console.log("auth routes loaded");
+
+// PUBLIC ROUTES (No authentication required)
+router.post("/signup", signup);
+router.post("/login", login);
 
 router.get("/specialties", async (req, res) => {
   console.log("✅ Specialties endpoint hit!");
@@ -48,35 +52,41 @@ router.get("/specialties", async (req, res) => {
 });
 console.log("✅ Specialties route registered at /specialties");
 
-router.post("/signup", signup);
-router.post("/login", login);
-router.get("/profile/:email", getProfile);
-router.put("/profile/update", updateProfile);
-router.get("/patient/profile/:email", patientProfileUpdate.getPatientProfile);
-router.post("/doctor/setup-schedule", timetableController.saveDoctorSchedule);
-router.put("/doctor/update-schedule", timetableController.saveDoctorSchedule);
-router.get("/doctor/schedule/:email", timetableController.getDoctorSchedule);
+// Public timetable/doctor browsing routes
 router.get("/timetable/doctors-by-specialty", timetableController.getDoctorsBySpecialty);
 router.get("/timetable/all-doctors", timetableController.getAllDoctors);
 router.get("/timetable/top-doctors", timetableController.getTopDoctors);
 router.get("/timetable/doctor/:doctorId", timetableController.getDoctorById);
 router.get("/appointments/available-slots/:doctorId", appointmentController.getAvailableSlots);
-router.post("/appointments/book", appointmentController.bookAppointment);
-router.put("/appointments/:id/cancel", authenticateToken, requirePatient, appointmentController.cancelAppointment);
-router.get("/patient/:email/appointments", patientAppointmentsController.getPatientAppointmentsByEmail);
-router.get("/doctor/appointments/:email", doctorAppointmentsController.getDoctorAppointments);
-router.get("/doctor/appointments/:email/today-count", doctorAppointmentsController.getTodayAppointmentsCount);
-router.get("/doctor/profile/:email", doctorProfileController.getDoctorProfile);
-router.put("/doctor/appointments/:id/complete", doctorAppointmentsController.completeAppointment);
-router.put("/doctor/profile", doctorProfileController.updateDoctorProfile);
-router.put("/doctor/profile/update", doctorProfileController.updateDoctorBasicInfo);
-router.put("/doctor/license", doctorProfileController.updateDoctorLicense);
-router.post("/patient-profile", patientProfileUpdate.createPatientProfile);
-router.put("/patient/update-profile", authenticateToken, requirePatient, patientProfileUpdate.updatePatientProfile);
-router.delete("/patient/delete-profile", authenticateToken, requirePatient, patientProfileUpdate.deletePatientProfile);
 
-// ✅ New specialization route
-router.post("/doctor/specialization", saveDoctorSpecialization);
+// AUTHENTICATED ROUTES - All routes below require valid token
+router.use(authenticateToken);
+
+// General authenticated routes
+router.get("/profile/:email", getProfile);
+router.put("/profile/update", updateProfile);
+
+// DOCTOR-ONLY ROUTES
+router.post("/doctor/setup-schedule", requireDoctor, timetableController.saveDoctorSchedule);
+router.put("/doctor/update-schedule", requireDoctor, timetableController.saveDoctorSchedule);
+router.get("/doctor/schedule/:email", requireDoctor, timetableController.getDoctorSchedule);
+router.get("/doctor/appointments/:email", requireDoctor, doctorAppointmentsController.getDoctorAppointments);
+router.get("/doctor/appointments/:email/today-count", requireDoctor, doctorAppointmentsController.getTodayAppointmentsCount);
+router.get("/doctor/profile/:email", requireDoctor, doctorProfileController.getDoctorProfile);
+router.put("/doctor/appointments/:id/complete", requireDoctor, doctorAppointmentsController.completeAppointment);
+router.put("/doctor/profile", requireDoctor, doctorProfileController.updateDoctorProfile);
+router.put("/doctor/profile/update", requireDoctor, doctorProfileController.updateDoctorBasicInfo);
+router.put("/doctor/license", requireDoctor, doctorProfileController.updateDoctorLicense);
+router.post("/doctor/specialization", requireDoctor, saveDoctorSpecialization);
+
+// PATIENT-ONLY ROUTES
+router.post("/appointments/book", requirePatient, appointmentController.bookAppointment);
+router.put("/appointments/:id/cancel", requirePatient, appointmentController.cancelAppointment);
+router.get("/patient/:email/appointments", requirePatient, patientAppointmentsController.getPatientAppointmentsByEmail);
+router.get("/patient/profile/:email", requirePatient, patientProfileUpdate.getPatientProfile);
+router.post("/patient-profile", requirePatient, patientProfileUpdate.createPatientProfile);
+router.put("/patient/update-profile", requirePatient, patientProfileUpdate.updatePatientProfile);
+router.delete("/patient/delete-profile", requirePatient, patientProfileUpdate.deletePatientProfile);
 
 console.log("✅ All auth routes registered successfully");
 
