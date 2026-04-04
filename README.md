@@ -40,8 +40,8 @@ npm run dev
 ## 📊 Database Objects
 
 - **3 Functions**: Statistical calculations
-- **2 Procedures**: Multi-step workflows  
-- **2 Triggers**: Audit logging
+- **1 Procedure**: Multi-step workflow  
+- **1 Trigger**: Audit logging
 
 ## 📖 Documentation
 
