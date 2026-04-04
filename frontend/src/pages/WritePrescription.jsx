@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/WritePrescription.css";
+import { getAuthHeaders } from "../utils/api";
 
 export default function WritePrescription() {
   const navigate = useNavigate();
@@ -26,7 +27,9 @@ export default function WritePrescription() {
 
   const fetchMedicines = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/prescriptions/medicines');
+      const res = await fetch('http://localhost:3000/api/prescriptions/medicines', {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setMedicines(data.medicines || []);
@@ -62,9 +65,7 @@ export default function WritePrescription() {
     try {
       const res = await fetch('http://localhost:3000/api/prescriptions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           appointmentId: parseInt(appointmentId),
           ...formData,

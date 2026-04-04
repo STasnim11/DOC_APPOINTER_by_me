@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -23,6 +24,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* PUBLIC ROUTES */}
         <Route path="/" element={<Home />} />
         <Route path="/all-doctors" element={<AllDoctors />} />
         <Route path="/doctor/:doctorId" element={<DoctorProfile />} />
@@ -30,21 +32,99 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/clear" element={<ClearStorage />} />
 
-        {/* DASHBOARDS */}
-        <Route path="/patient/dashboard" element={<PatientDashboard />} />
-        <Route path="/doctor/license-verification" element={<DoctorLicenseVerification />} />
-        <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-        <Route path="/doctor/prescription/:appointmentId" element={<WritePrescription />} />
+        {/* PATIENT PROTECTED ROUTES */}
+        <Route 
+          path="/patient/dashboard" 
+          element={
+            <ProtectedRoute requiredRole="PATIENT">
+              <PatientDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/patient/setup" 
+          element={
+            <ProtectedRoute requiredRole="PATIENT">
+              <PatientSetup />
+            </ProtectedRoute>
+          } 
+        />
 
-        <Route path="/patient/setup" element={<PatientSetup />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/doctor/specialization/setup" element={<SpecializationSetup />} />
-        
-        {/* Admin Management Routes */}
-        <Route path="/admin/medicines" element={<MedicineManagement />} />
-        <Route path="/admin/lab-tests" element={<LabTestManagement />} />
-        <Route path="/admin/beds" element={<BedManagement />} />
-        <Route path="/admin/database-features" element={<DatabaseFeatures />} />
+        {/* DOCTOR PROTECTED ROUTES */}
+        <Route 
+          path="/doctor/license-verification" 
+          element={
+            <ProtectedRoute requiredRole="DOCTOR">
+              <DoctorLicenseVerification />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/doctor/dashboard" 
+          element={
+            <ProtectedRoute requiredRole="DOCTOR">
+              <DoctorDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/doctor/prescription/:appointmentId" 
+          element={
+            <ProtectedRoute requiredRole="DOCTOR">
+              <WritePrescription />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/doctor/specialization/setup" 
+          element={
+            <ProtectedRoute requiredRole="DOCTOR">
+              <SpecializationSetup />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* ADMIN PROTECTED ROUTES */}
+        <Route 
+          path="/admin/dashboard" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/medicines" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <MedicineManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/lab-tests" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <LabTestManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/beds" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <BedManagement />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/database-features" 
+          element={
+            <ProtectedRoute requiredRole="ADMIN">
+              <DatabaseFeatures />
+            </ProtectedRoute>
+          } 
+        />
         
         {/* DEFAULT */}
         <Route path="*" element={<Home />} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/DoctorDashboard.css";
 import DoctorAvatar from "../components/DoctorAvatar";
+import { getAuthHeaders } from "../utils/api";
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -15,9 +16,11 @@ export default function DoctorDashboard() {
   const [doctorProfile, setDoctorProfile] = useState({});
   const [appointments, setAppointments] = useState([]);
   const [todayCount, setTodayCount] = useState(0);
+  const [totalAppointments, setTotalAppointments] = useState(0);
   const [filter, setFilter] = useState('all'); // all, today, upcoming, completed, cancelled
   const [specializations, setSpecializations] = useState([]);
   const [scheduleLoaded, setScheduleLoaded] = useState(false);
+  const [totalSlots, setTotalSlots] = useState(0);
   
   // Prescription modal states
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
@@ -61,27 +64,39 @@ export default function DoctorDashboard() {
 
   const fetchDoctorSchedule = async (email) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/doctor/schedule/${email}`);
+      const res = await fetch(`http://localhost:3000/api/doctor/schedule/${email}`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.schedule) {
           setSchedule(data.schedule);
           setScheduleLoaded(true);
+          setTotalSlots(data.totalSlots || 0);
         }
       } else {
         setScheduleLoaded(false);
+        setTotalSlots(0);
       }
     } catch (err) {
       setScheduleLoaded(false);
+      setTotalSlots(0);
     }
   };
 
   const fetchDoctorProfile = async (email) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/doctor/profile/${email}`);
+      const res = await fetch(`http://localhost:3000/api/doctor/profile/${email}`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setDoctorProfile(data);
+        
+        // Fetch total appointments using SQL function
+        if (data.doctorId) {
+          fetchTotalAppointments(data.doctorId);
+        }
         
         // Populate edit form with current data
         setEditForm({
@@ -129,7 +144,9 @@ const fetchSpecializations = async () => {
   const fetchAppointments = async (email) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/doctor/appointments/${email}`);
+      const res = await fetch(`http://localhost:3000/api/doctor/appointments/${email}`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setAppointments(data.appointments || []);
@@ -147,7 +164,9 @@ const fetchSpecializations = async () => {
     setPrescriptionData(null);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/prescriptions/${prescriptionId}`);
+      const res = await fetch(`http://localhost:3000/api/prescriptions/${prescriptionId}`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.prescription) {
@@ -172,33 +191,61 @@ const handleCompleteAppointment = async (appointmentId) => {
   try {
     const res = await fetch(
       `http://localhost:3000/api/doctor/appointments/${appointmentId}/complete`,
-      { method: 'PUT' }
+      { 
+        method: 'PUT',
+        headers: getAuthHeaders()
+      }
     );
     const data = await res.json();
 
     if (res.ok) {
-      setMessage('✅ Appointment marked as completed');
+      setMessage('Appointment marked as completed');
       fetchAppointments(user.email);   // refresh the list
       fetchTodayCount(user.email);     // refresh the badge count
       setTimeout(() => setMessage(''), 3000);
     } else {
-      setMessage('❌ ' + (data.error || 'Failed to complete appointment'));
+      setMessage(data.error || 'Failed to complete appointment');
     }
   } catch (err) {
-    setMessage('❌ Server error');
+    setMessage('Server error');
   } finally {
     setLoading(false);
   }
 };
   const fetchTodayCount = async (email) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/doctor/appointments/${email}/today-count`);
+      const res = await fetch(`http://localhost:3000/api/doctor/appointments/${email}/today-count`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setTodayCount(data.totalPatients || 0);
       }
     } catch (err) {
       // Error fetching today count
+    }
+  };
+
+  const fetchTotalAppointments = async (doctorId) => {
+    console.log('🔍 fetchTotalAppointments called with doctorId:', doctorId);
+    try {
+      const url = `http://localhost:3000/api/doctor/appointment-count/${doctorId}`;
+      console.log('📡 Fetching from:', url);
+      
+      const res = await fetch(url, {
+        headers: getAuthHeaders()
+      });
+      console.log('📥 Response status:', res.status);
+      
+      if (res.ok) {
+        const data = await res.json();
+        console.log('✅ Response data:', data);
+        setTotalAppointments(data.appointmentCount || 0);
+      } else {
+        console.error('❌ Response not OK:', res.status, res.statusText);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching total appointments:', err);
     }
   };
 
@@ -220,9 +267,7 @@ const handleCompleteAppointment = async (appointmentId) => {
       // Use PUT for update (since we're replacing existing schedule)
       const res = await fetch('http://localhost:3000/api/doctor/update-schedule', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           email: user.email,
           schedule
@@ -232,12 +277,12 @@ const handleCompleteAppointment = async (appointmentId) => {
       const result = await res.json();
 
       if (res.ok) {
-        setMessage('✅ ' + result.message);
+        setMessage(result.message);
         // Refresh schedule from database
         await fetchDoctorSchedule(user.email);
         setTimeout(() => setMessage(''), 5000);
       } else {
-        setMessage('❌ ' + (result.error || 'Failed to save availability'));
+        setMessage((result.error || 'Failed to save availability'));
       }
     } catch (err) {
       setMessage('❌ Server error');
@@ -525,8 +570,13 @@ const handleCompleteAppointment = async (appointmentId) => {
             <div className="doctor-appointments-view">
               <div className="appointments-header">
                 <h1>My Appointments</h1>
-                <div className="today-count-badge">
-                  📊 Today's Patients: <strong>{todayCount}</strong>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <div className="today-count-badge">
+                    📊 Today's Patients: <strong>{todayCount}</strong>
+                  </div>
+                  <div className="today-count-badge" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                    📈 Total Appointments: <strong>{totalAppointments}</strong>
+                  </div>
                 </div>
               </div>
 
@@ -715,21 +765,22 @@ const handleCompleteAppointment = async (appointmentId) => {
           {/* Availability View */}
           {activeView === 'availability' && (
             <div className="availability-view">
-              <h1>Availability Schedule</h1>
-              
-              {scheduleLoaded && (
-                <div style={{
-                  padding: '0.75rem 1rem',
-                  background: '#d1fae5',
-                  border: '1px solid #10b981',
-                  borderRadius: '6px',
-                  marginBottom: '1rem',
-                  color: '#065f46',
-                  fontSize: '0.9rem'
-                }}>
-                  ✅ Showing your current availability schedule from database
-                </div>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <h1 style={{ margin: 0 }}>Availability Schedule</h1>
+                {scheduleLoaded && totalSlots > 0 && (
+                  <div style={{
+                    padding: '0.5rem 1rem',
+                    background: '#eff6ff',
+                    border: '1px solid #3b82f6',
+                    borderRadius: '6px',
+                    color: '#1e40af',
+                    fontSize: '0.9rem',
+                    fontWeight: '600'
+                  }}>
+                    {totalSlots} slots available
+                  </div>
+                )}
+              </div>
               
               {!scheduleLoaded && (
                 <div style={{
@@ -741,7 +792,7 @@ const handleCompleteAppointment = async (appointmentId) => {
                   color: '#92400e',
                   fontSize: '0.9rem'
                 }}>
-                  ℹ️ No schedule found. Set your availability below and click Save.
+                  No schedule found. Set your availability below and click Save.
                 </div>
               )}
               
@@ -998,7 +1049,7 @@ const handleCompleteAppointment = async (appointmentId) => {
                           // Update user info (name, phone)
                           const userRes = await fetch('http://localhost:3000/api/profile/update', {
                             method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: getAuthHeaders(),
                             body: JSON.stringify({
                               email: user.email,
                               name: editForm.name,
@@ -1016,7 +1067,7 @@ const handleCompleteAppointment = async (appointmentId) => {
                           // Update doctor-specific info
                           const doctorRes = await fetch('http://localhost:3000/api/doctor/profile/update', {
                             method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: getAuthHeaders(),
                             body: JSON.stringify({
                               email: user.email,
                               degrees: editForm.degrees,
@@ -1037,7 +1088,7 @@ const handleCompleteAppointment = async (appointmentId) => {
                           if (editForm.specializationId) {
                             const specRes = await fetch('http://localhost:3000/api/doctor/specialization', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: getAuthHeaders(),
                               body: JSON.stringify({
                                 email: user.email,
                                 specializationId: parseInt(editForm.specializationId)

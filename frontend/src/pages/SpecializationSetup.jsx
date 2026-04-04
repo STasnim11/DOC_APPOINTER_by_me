@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/AuthLayout";
+import { getAuthHeaders } from "../utils/api";
 
 export default function SpecializationSetup() {
   const navigate = useNavigate();
@@ -13,7 +14,9 @@ const userEmail = localStorage.getItem("userEmail"); // optional, just for displ
   useEffect(() => {
     async function fetchSpecializations() {
       try {
-        const res = await fetch("http://localhost:3000/api/doctor/specializations");
+        const res = await fetch("http://localhost:3000/api/doctor/specializations", {
+          headers: getAuthHeaders()
+        });
         const data = await res.json();
         setSpecializations(data);
       } catch (err) {
@@ -34,7 +37,7 @@ const userEmail = localStorage.getItem("userEmail"); // optional, just for displ
     try {
       const res = await fetch("http://localhost:3000/api/doctor/specialization", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
            email: userEmail, // ✅ send email instead of userId
           specializationId: selectedSpec,

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import '../styles/PatientDashboard.css';
 import UserAvatar from '../components/DoctorAvatar';
+import { getAuthHeaders } from '../utils/api';
 
 export default function PatientDashboard() {
   const navigate = useNavigate();
@@ -60,7 +61,9 @@ export default function PatientDashboard() {
 
   const fetchPatientProfile = async (email) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/patient/profile/${email}`);
+      const res = await fetch(`http://localhost:3000/api/patient/profile/${email}`, {
+        headers: getAuthHeaders()
+      });
       
       if (res.ok) {
         const data = await res.json();
@@ -77,7 +80,9 @@ export default function PatientDashboard() {
   const fetchAppointments = async (email) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/patient/${email}/appointments`);
+      const res = await fetch(`http://localhost:3000/api/patient/${email}/appointments`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setAppointments(data || []);
@@ -198,7 +203,9 @@ export default function PatientDashboard() {
     setPrescriptionData(null);
 
     try {
-      const res = await fetch(`http://localhost:3000/api/prescriptions/${prescriptionId}`);
+      const res = await fetch(`http://localhost:3000/api/prescriptions/${prescriptionId}`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         
@@ -257,7 +264,9 @@ export default function PatientDashboard() {
     
     // Fetch available beds
     try {
-      const res = await fetch('http://localhost:3000/api/beds/available');
+      const res = await fetch('http://localhost:3000/api/beds/available', {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setAvailableBeds(data.beds || []);
@@ -283,9 +292,7 @@ export default function PatientDashboard() {
     try {
       const res = await fetch('http://localhost:3000/api/bed-bookings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           appointmentId: currentBedAppointmentId,
           bedId: selectedBed.id
@@ -330,7 +337,9 @@ export default function PatientDashboard() {
     }
     
     try {
-      const res = await fetch(`http://localhost:3000/api/patient/${user.email}/bed-bookings`);
+      const res = await fetch(`http://localhost:3000/api/patient/${user.email}/bed-bookings`, {
+        headers: getAuthHeaders()
+      });
       
       if (res.ok) {
         const data = await res.json();
@@ -356,9 +365,7 @@ export default function PatientDashboard() {
     try {
       const res = await fetch('http://localhost:3000/api/lab-test-appointments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           patientEmail: user.email,
           testId: selectedTest.id,
@@ -400,7 +407,9 @@ export default function PatientDashboard() {
     if (!user?.email) return;
     
     try {
-      const res = await fetch(`http://localhost:3000/api/patient/${user.email}/lab-tests`);
+      const res = await fetch(`http://localhost:3000/api/patient/${user.email}/lab-tests`, {
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         const data = await res.json();
         setMyLabTests(data.labTests || []);
@@ -1429,7 +1438,7 @@ export default function PatientDashboard() {
               className={`sidebar-item ${activeView === 'book' ? 'active' : ''}`}
               onClick={() => navigate('/all-doctors')}
             >
-              <span className="sidebar-icon">➕</span>
+              <span className="sidebar-icon book-icon">➕</span>
               <span>Book Appointment</span>
             </div>
           </nav>

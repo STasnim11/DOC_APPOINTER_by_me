@@ -24,6 +24,11 @@ export default function AdminDashboard() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [testFileUrl, setTestFileUrl] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState({ doctors: [], branches: [], patients: [] });
+  const [showBillModal, setShowBillModal] = useState(false);
+  const [billForm, setBillForm] = useState({ appointmentId: '', consultationFee: '' });
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -110,7 +115,8 @@ export default function AdminDashboard() {
     { id: 'lab-test-appointments', name: 'Lab Test Appointments', icon: '🧪', path: '/admin/lab-test-appointments' },
     { id: 'medicines', name: 'Medicines', icon: '💊', path: '/admin/medicines' },
     { id: 'bed-bookings', name: 'Bed Bookings', icon: '🛏️', path: '/admin/bed-bookings' },
-    { id: 'departments', name: 'Departments', icon: '🏥', path: '/admin/departments' }
+    { id: 'departments', name: 'Departments', icon: '🏥', path: '/admin/departments' },
+    { id: 'analytics', name: 'Analytics & Reports', icon: '📊', path: '/admin/analytics' }
   ];
 
   const handleModuleClick = (module) => {
@@ -180,10 +186,6 @@ export default function AdminDashboard() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) {
-      return;
-    }
-
     setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -244,6 +246,8 @@ export default function AdminDashboard() {
       setShowModal(true);
     } finally {
       setLoading(false);
+      setShowDeleteModal(false);
+      setDeleteItemId(null);
     }
   };
 
@@ -261,6 +265,22 @@ export default function AdminDashboard() {
       if (!token) {
         setMessage('❌ Please login again - no token found');
         setData([]);
+        setLoading(false);
+        return;
+      }
+
+      // Handle analytics separately
+      if (moduleId === 'analytics') {
+        const res = await fetch('http://localhost:3000/api/admin/db-features/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const result = await res.json();
+          setAnalyticsData(result);
+        } else {
+          setMessage('❌ Failed to fetch analytics data');
+        }
         setLoading(false);
         return;
       }
@@ -413,9 +433,14 @@ export default function AdminDashboard() {
                 placeholder="Enter department description"
               />
             </div>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Department'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button type="button" className="btn-cancel" onClick={handleCancel}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Department'}
+              </button>
+            </div>
           </form>
         );
 
@@ -452,9 +477,14 @@ export default function AdminDashboard() {
                 onChange={handleInputChange}
               />
             </div>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Branch'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button type="button" className="btn-cancel" onClick={handleCancel}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Branch'}
+              </button>
+            </div>
           </form>
         );
 
@@ -496,9 +526,14 @@ export default function AdminDashboard() {
                 <option value="emergency">Emergency</option>
               </select>
             </div>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Contact'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button type="button" className="btn-cancel" onClick={handleCancel}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Contact'}
+              </button>
+            </div>
           </form>
         );
 
@@ -580,9 +615,14 @@ export default function AdminDashboard() {
                 placeholder="Enter branch ID (optional)"
               />
             </div>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Technician'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button type="button" className="btn-cancel" onClick={handleCancel}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Technician'}
+              </button>
+            </div>
           </form>
         );
 
@@ -746,9 +786,14 @@ export default function AdminDashboard() {
                 onChange={handleInputChange}
               />
             </div>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Medicine'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button type="button" className="btn-cancel" onClick={handleCancel}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Medicine'}
+              </button>
+            </div>
           </form>
         );
 
@@ -818,9 +863,14 @@ export default function AdminDashboard() {
                 placeholder="e.g., 30"
               />
             </div>
-            <button type="submit" className="btn-save" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Lab Test'}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button type="button" className="btn-cancel" onClick={handleCancel}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-save" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Lab Test'}
+              </button>
+            </div>
           </form>
         );
 
@@ -849,6 +899,95 @@ export default function AdminDashboard() {
       return <div className="loading">Loading...</div>;
     }
 
+    // Analytics view
+    if (selectedModule?.id === 'analytics') {
+      return (
+        <div style={{ padding: '40px 32px 32px 32px' }}>
+          <h2 style={{ marginBottom: '40px', color: '#1e293b', fontSize: '32px', fontWeight: '700', letterSpacing: '-0.5px' }}>📊 Analytics & Reports</h2>
+          
+          {/* Top Doctors by Appointment Count */}
+          <div style={{ marginBottom: '48px' }}>
+            <h3 style={{ color: '#7c3aed', marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>🏆 Top Doctors by Appointments</h3>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Doctor ID</th>
+                  <th>Doctor Name</th>
+                  <th>Total Appointments</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsData.doctors.map((doctor) => (
+                  <tr key={doctor.doctorId}>
+                    <td>{doctor.doctorId}</td>
+                    <td>{doctor.doctorName}</td>
+                    <td><strong style={{ color: '#7c3aed' }}>{doctor.appointmentCount}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Ward Bed Occupancy */}
+          <div style={{ marginBottom: '48px' }}>
+            <h3 style={{ color: '#059669', marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>🏥 Ward Bed Occupancy Rates</h3>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Ward Name</th>
+                  <th>Occupancy Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsData.wards.map((ward, index) => (
+                  <tr key={index}>
+                    <td>{ward.wardName}</td>
+                    <td>
+                      <span style={{
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        fontWeight: '600',
+                        fontSize: '13px',
+                        background: ward.occupancyRate > 80 ? 'rgba(239, 68, 68, 0.1)' : 
+                                   ward.occupancyRate > 50 ? 'rgba(251, 191, 36, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                        color: ward.occupancyRate > 80 ? '#dc2626' : 
+                               ward.occupancyRate > 50 ? '#d97706' : '#16a34a'
+                      }}>
+                        {ward.occupancyRate}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Patient Expenses */}
+          <div style={{ marginBottom: '48px' }}>
+            <h3 style={{ color: '#dc2626', marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>💰 Top Patients by Total Expenses</h3>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Patient ID</th>
+                  <th>Patient Name</th>
+                  <th>Total Expenses</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsData.patients.map((patient) => (
+                  <tr key={patient.patientId}>
+                    <td>{patient.patientId}</td>
+                    <td>{patient.patientName}</td>
+                    <td><strong style={{ color: '#dc2626' }}>৳{patient.totalExpenses}</strong></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
     if (filteredData.length === 0) {
       return <div className="no-data">{searchAdminId ? 'No records found for this Admin ID' : 'No records found'}</div>;
     }
@@ -875,7 +1014,7 @@ export default function AdminDashboard() {
                   <td>{item.description || 'N/A'}</td>
                   <td>
                     <button className="btn-edit" onClick={() => handleEdit(item)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -906,7 +1045,7 @@ export default function AdminDashboard() {
                   <td>{item.establishedDate ? new Date(item.establishedDate).toLocaleDateString() : 'N/A'}</td>
                   <td>
                     <button className="btn-edit" onClick={() => handleEdit(item)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -937,7 +1076,7 @@ export default function AdminDashboard() {
                   <td>{item.type}</td>
                   <td>
                     <button className="btn-edit" onClick={() => handleEdit(item)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -974,7 +1113,7 @@ export default function AdminDashboard() {
                   <td>{item.experienceYears || 0} years</td>
                   <td>
                     <button className="btn-edit" onClick={() => handleEdit(item)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -1021,7 +1160,7 @@ export default function AdminDashboard() {
                   <td>{item.floorNumber || 'N/A'}</td>
                   <td>
                     <button className="btn-edit" onClick={() => handleEdit(item)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -1045,7 +1184,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td>{item.name}</td>
@@ -1064,7 +1203,7 @@ export default function AdminDashboard() {
                   <td>{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : 'N/A'}</td>
                   <td>
                     <button className="btn-edit" onClick={() => handleEdit(item)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -1087,7 +1226,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td>{item.testName}</td>
@@ -1097,7 +1236,7 @@ export default function AdminDashboard() {
                   <td>{item.preparationRequired || 'None'}</td>
                   <td>
                     <button className="btn-edit" onClick={() => handleEdit(item)}>Edit</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -1121,7 +1260,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td style={{ fontWeight: 'bold', color: '#000000' }}>{item.token}</td>
                   <td>
@@ -1155,7 +1294,7 @@ export default function AdminDashboard() {
                     >
                       {item.status === 'COMPLETED' ? 'View' : 'Upload Result'}
                     </button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -1171,7 +1310,7 @@ export default function AdminDashboard() {
                 <th>Booking ID</th>
                 <th>Patient</th>
                 <th>Doctor</th>
-                <th>Bed Info</th>
+                <th style={{ minWidth: '200px' }}>Bed Info</th>
                 <th>Appointment Date</th>
                 <th>Price/Day</th>
                 <th>Status</th>
@@ -1180,7 +1319,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td style={{ fontWeight: 'bold', color: '#000000' }}>{item.id}</td>
                   <td>
@@ -1188,15 +1327,15 @@ export default function AdminDashboard() {
                     <div style={{ fontSize: '12px', color: '#7f8c8d' }}>{item.patientEmail}</div>
                   </td>
                   <td>{item.doctorName}</td>
-                  <td>
-                    <div><strong>Bed {item.bedNumber}</strong></div>
-                    <div style={{ fontSize: '12px', color: '#7f8c8d' }}>
+                  <td style={{ minWidth: '200px' }}>
+                    <div style={{ marginBottom: '4px' }}><strong>Bed {item.bedNumber}</strong></div>
+                    <div style={{ fontSize: '12px', color: '#7f8c8d', lineHeight: '1.4' }}>
                       {item.wardName} - {item.bedType}
                       {item.floorNumber && ` (Floor ${item.floorNumber})`}
                     </div>
                   </td>
                   <td>{new Date(item.appointmentDate).toLocaleDateString()}</td>
-                  <td>₹{item.pricePerDay}</td>
+                  <td>৳{item.pricePerDay}</td>
                   <td>
                     <span style={{
                       padding: '4px 12px',
@@ -1211,7 +1350,7 @@ export default function AdminDashboard() {
                   </td>
                   <td>{new Date().toLocaleString()}</td>
                   <td>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                    <button className="btn-delete" onClick={() => { setDeleteItemId(item.id); setShowDeleteModal(true); }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -1691,31 +1830,7 @@ export default function AdminDashboard() {
           </nav>
         </aside>
 
-        {/* Sub Sidebar */}
-        {showSubSidebar && selectedModule && (
-          <aside className="sub-sidebar">
-            <div className="sub-sidebar-header">
-              <h3>{selectedModule.name}</h3>
-            </div>
-            <div
-              className={`sub-sidebar-item ${activeView === 'view' ? 'active' : ''}`}
-              onClick={() => handleSubAction('view')}
-            >
-              <span className="sub-icon">👁️</span>
-              <span>View</span>
-            </div>
-            {selectedModule.id !== 'lab-test-appointments' && 
-             selectedModule.id !== 'bed-bookings' && (
-              <div
-                className={`sub-sidebar-item ${activeView === 'add' ? 'active' : ''}`}
-                onClick={() => handleSubAction('add')}
-              >
-                <span className="sub-icon">➕</span>
-                <span>Add</span>
-              </div>
-            )}
-          </aside>
-        )}
+        {/* Sub Sidebar - REMOVED */}
 
         {/* Main Content Area */}
         <main className="main-content">
@@ -1726,11 +1841,33 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="content-area">
-              <div className="content-header">
-                <h2>{selectedModule.name} - {activeView === 'view' ? 'View' : 'Add New'}</h2>
-              </div>
+              {selectedModule.id !== 'analytics' && (
+                <div className="content-header">
+                  <h2>{selectedModule.name}</h2>
+                  {selectedModule.id !== 'lab-test-appointments' && 
+                   selectedModule.id !== 'bed-bookings' && (
+                    <button 
+                      className="admin-btn admin-btn-primary"
+                      onClick={() => setActiveView(activeView === 'add' ? 'view' : 'add')}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      {activeView === 'add' ? (
+                        <>
+                          <span>👁️</span>
+                          <span>View All</span>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ fontSize: '18px' }}>+</span>
+                          <span>Add New</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
               
-              {activeView === 'view' && (
+              {activeView === 'view' && selectedModule.id !== 'analytics' && (
                 <div style={{
                   display: 'flex',
                   gap: '1rem',
@@ -1811,6 +1948,141 @@ export default function AdminDashboard() {
           )}
         </main>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+          onClick={() => {
+            setShowDeleteModal(false);
+            setDeleteItemId(null);
+          }}
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '400px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              animation: 'scaleIn 0.2s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: '#fee2e2',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+                fontSize: '24px'
+              }}>
+                ⚠️
+              </div>
+              <h2 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                marginBottom: '8px',
+                color: '#111827'
+              }}>
+                Confirm Delete
+              </h2>
+              <p style={{ 
+                color: '#6b7280', 
+                fontSize: '14px',
+                lineHeight: '1.5'
+              }}>
+                Are you sure you want to delete this {selectedModule?.name.toLowerCase()}? This action cannot be undone.
+              </p>
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px',
+              marginTop: '24px'
+            }}>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteItemId(null);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteItemId)}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: loading ? '#fca5a5' : '#ef4444',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#dc2626')}
+                onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#ef4444')}
+              >
+                {loading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }
