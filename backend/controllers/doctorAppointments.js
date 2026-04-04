@@ -156,26 +156,38 @@ exports.completeAppointment = async (req, res) => {
   try {
     connection = await connectDB();
 
-    // Check if appointment exists
-    const checkResult = await connection.execute(
-      `SELECT ID, STATUS
-       FROM DOCTORS_APPOINTMENTS
-       WHERE ID = :id`,
-      { id }
-    );
 
-    if (checkResult.rows.length === 0) {
-      return res.status(404).json({ error: "❌ Appointment not found" });
-    }
+const checkResult = await connection.execute(
+  `SELECT da.ID, da.STATUS, p.ID as PRESCRIPTION_ID
+   FROM DOCTORS_APPOINTMENTS da
+   LEFT JOIN PRESCRIPTION p ON da.ID = p.APPOINTMENT_ID
+   WHERE da.ID = :id`,
+  { id }
+);
 
-    // Update status to COMPLETED
-    await connection.execute(
-      `UPDATE DOCTORS_APPOINTMENTS
-       SET STATUS = 'COMPLETED'
-       WHERE ID = :id`,
-      { id }
-    );
+if (checkResult.rows.length === 0) {
+  return res.status(404).json({ error: "❌ Appointment not found" });
+}
 
+const currentStatus = checkResult.rows[0][1];
+const hasPrescription   = checkResult.rows[0][2];
+
+if (currentStatus !== 'BOOKED') {
+  return res.status(400).json({
+    error: `❌ Only BOOKED appointments can be completed. Current status: ${currentStatus}`
+  });
+}
+
+if (!hasPrescription) {
+  return res.status(400).json({
+    error: "❌ Please write a prescription before completing the appointment"
+  });
+}
+
+await connection.execute(
+  `UPDATE DOCTORS_APPOINTMENTS SET STATUS = 'COMPLETED' WHERE ID = :id`,
+  { id }
+);
     await connection.commit();
 
     return res.status(200).json({

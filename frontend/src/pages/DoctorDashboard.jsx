@@ -165,7 +165,31 @@ const fetchSpecializations = async () => {
       setLoadingPrescription(false);
     }
   };
+const handleCompleteAppointment = async (appointmentId) => {
+  if (!window.confirm('Mark this appointment as completed?')) return;
 
+  setLoading(true);
+  try {
+    const res = await fetch(
+      `http://localhost:3000/api/doctor/appointments/${appointmentId}/complete`,
+      { method: 'PUT' }
+    );
+    const data = await res.json();
+
+    if (res.ok) {
+      setMessage('✅ Appointment marked as completed');
+      fetchAppointments(user.email);   // refresh the list
+      fetchTodayCount(user.email);     // refresh the badge count
+      setTimeout(() => setMessage(''), 3000);
+    } else {
+      setMessage('❌ ' + (data.error || 'Failed to complete appointment'));
+    }
+  } catch (err) {
+    setMessage('❌ Server error');
+  } finally {
+    setLoading(false);
+  }
+};
   const fetchTodayCount = async (email) => {
     try {
       const res = await fetch(`http://localhost:3000/api/doctor/appointments/${email}/today-count`);
@@ -590,44 +614,102 @@ const fetchSpecializations = async () => {
                         <p><strong>Phone:</strong> {apt.patientPhone || 'N/A'}</p>
                       </div>
                       <div className="apt-actions">
-                        {apt.status === 'BOOKED' && !apt.hasPrescription && (
-                          <button 
-                            className="btn-write-prescription"
-                            onClick={() => navigate(`/doctor/prescription/${apt.appointmentId}`)}
-                          >
-                            ✍️ Write Prescription
-                          </button>
-                        )}
-                        {apt.hasPrescription && (
-                          <>
-                            <div className="prescription-badge">
-                              ✅ Prescription Added
-                            </div>
-                            <button 
-                              className="btn-view-prescription"
-                              onClick={() => handleViewPrescription(apt.prescriptionId)}
-                              style={{
-                                marginTop: '0.5rem',
-                                padding: '0.5rem 1rem',
-                                background: '#dbeafe',
-                                color: '#1e40af',
-                                border: '1px solid #3b82f6',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '0.875rem',
-                                fontWeight: '600'
-                              }}
-                            >
-                              📄 View Prescription
-                            </button>
-                          </>
-                        )}
-                      </div>
+
+  {/* No prescription yet → show Write button */}
+  {apt.status === 'BOOKED' && !apt.hasPrescription && (
+    <button
+      className="btn-write-prescription"
+      onClick={() => navigate(`/doctor/prescription/${apt.appointmentId}`)}
+    >
+      ✍️ Write Prescription
+    </button>
+  )}
+
+  {/* Prescription exists → one line */}
+  {apt.hasPrescription && (
+    <div style={{
+      marginTop: '0.75rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.6rem 0.75rem',
+      border: '1.5px solid #bbf7d0',
+      borderRadius: '10px',
+      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)'
+    }}>
+
+      {/* Badge */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.3rem',
+        background: 'linear-gradient(90deg, #16a34a, #15803d)',
+        color: 'white',
+        padding: '0.4rem 0.65rem',
+        borderRadius: '7px',
+        fontSize: '0.75rem',
+        fontWeight: '700',
+        whiteSpace: 'nowrap',
+        flex: '0 0 auto'
+      }}>
+        ✅ Prescribed
+      </div>
+
+      {/* View button */}
+      <button
+        onClick={() => handleViewPrescription(apt.prescriptionId)}
+        style={{
+          flex: 1,
+          padding: '0.4rem 0.5rem',
+          background: 'white',
+          color: '#15803d',
+          border: '1.5px solid #16a34a',
+          borderRadius: '7px',
+          cursor: 'pointer',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }}
+        onMouseOver={e => e.currentTarget.style.background = '#f0fdf4'}
+        onMouseOut={e => e.currentTarget.style.background = 'white'}
+      >
+        📄 View
+      </button>
+
+      {/* Complete button */}
+      {apt.status === 'BOOKED' && (
+        <button
+          onClick={() => handleCompleteAppointment(apt.appointmentId)}
+          disabled={loading}
+          style={{
+            flex: 1,
+            padding: '0.4rem 0.5rem',
+            background: loading ? '#d1d5db' : 'linear-gradient(90deg, #16a34a, #15803d)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '7px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            whiteSpace: 'nowrap'
+          }}
+          onMouseOver={e => { if (!loading) e.currentTarget.style.opacity = '0.88'; }}
+          onMouseOut={e => { if (!loading) e.currentTarget.style.opacity = '1'; }}
+        >
+          {loading ? '⏳ Wait...' : '✔️ Complete'}
+        </button>
+      )}
+
+    </div>
+  )}
+
+</div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
+
           )}
 
           {/* Availability View */}

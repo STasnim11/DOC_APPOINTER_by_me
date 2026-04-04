@@ -11,7 +11,7 @@ exports.getAllBranchContacts = async (req, res) => {
               hb.NAME as BRANCH_NAME, hb.ADDRESS as BRANCH_ADDRESS
        FROM BRANCH_CONTACTS bc
        LEFT JOIN HOSPITAL_BRANCHES hb ON bc.BRANCH_ID = hb.ID
-       ORDER BY bc.ID DESC`
+       ORDER BY bc.ID ASC`
     );
 
     const contacts = result.rows.map(row => ({

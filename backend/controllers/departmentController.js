@@ -9,7 +9,7 @@ exports.getAllDepartments = async (req, res) => {
     const result = await connection.execute(
       `SELECT ID, ADMIN_ID, NAME, DESCRIPTION
        FROM DEPARTMENTS
-       ORDER BY NAME`
+       ORDER BY ID ASC`
     );
 
     const departments = result.rows.map(row => ({

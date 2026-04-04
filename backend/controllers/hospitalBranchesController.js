@@ -9,7 +9,7 @@ exports.getAllBranches = async (req, res) => {
     const result = await connection.execute(
       `SELECT ID, ADMIN_ID, NAME, ADDRESS, ESTABLISHED_DATE
        FROM HOSPITAL_BRANCHES
-       ORDER BY ID DESC`
+       ORDER BY ID ASC`
     );
 
     const branches = result.rows.map(row => ({

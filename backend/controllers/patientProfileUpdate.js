@@ -28,13 +28,15 @@ exports.getPatientProfile = async (req, res) => {
     }
 
     const row = userResult.rows[0];
+    console.log('📋 Raw row data:', row);
+    
     const profile = {
       id: row[0],
       name: row[1],
       email: row[2],
       phone: row[3],
       role: row[4],
-      dateOfBirth: row[5]?new Date(row[5]).toISOString().split('T')[0]:null,
+      dateOfBirth: row[5] ? new Date(row[5]).toISOString().split('T')[0] : null,
       gender: row[6],
       occupation: row[7],
       bloodType: row[8],
@@ -46,9 +48,19 @@ exports.getPatientProfile = async (req, res) => {
     return res.status(200).json(profile);
   } catch (err) {
     console.error("❌ Get patient profile error:", err);
-    return res.status(500).json({ error: "❌ Failed to get profile" });
+    console.error("❌ Error stack:", err.stack);
+    return res.status(500).json({ 
+      error: "❌ Failed to get profile",
+      details: err.message 
+    });
   } finally {
-    if (connection) await connection.close();
+    if (connection) {
+      try {
+        await connection.close();
+      } catch (closeErr) {
+        console.error("❌ Error closing connection:", closeErr);
+      }
+    }
   }
 };
 
@@ -75,28 +87,51 @@ exports.createPatientProfile = async (req, res) => {
   try {
     connection = await connectDB();
 
-    const sql = `UPDATE PATIENT
-SET
-  DATE_OF_BIRTH = :dateOfBirth,
-  GENDER = :gender,
-  OCCUPATION = :occupation,
-  BLOOD_TYPE = :bloodType,
-  MARITAL_STATUS = :maritalStatus,
-  ADDRESS = :address
-WHERE USER_ID = :userId
-      ;`
+    // Check if patient record already exists
+    const checkResult = await connection.execute(
+      `SELECT ID FROM PATIENT WHERE USER_ID = :userId`,
+      { userId }
+    );
 
-    const binds = {
-      userId,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-      gender: gender || null,
-      occupation: occupation || null,
-      bloodType: bloodType || null,
-      maritalStatus: maritalStatus || null,
-      address: address || null,
-    };
-
-    await connection.execute(sql, binds, { autoCommit: true });
+    if (checkResult.rows.length > 0) {
+      // Update existing record
+      await connection.execute(
+        `UPDATE PATIENT
+         SET DATE_OF_BIRTH = :dateOfBirth,
+             GENDER = :gender,
+             OCCUPATION = :occupation,
+             BLOOD_TYPE = :bloodType,
+             MARITAL_STATUS = :maritalStatus,
+             ADDRESS = :address
+         WHERE USER_ID = :userId`,
+        {
+          userId,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          gender: gender || null,
+          occupation: occupation || null,
+          bloodType: bloodType || null,
+          maritalStatus: maritalStatus || null,
+          address: address || null,
+        },
+        { autoCommit: true }
+      );
+    } else {
+      // Insert new record
+      await connection.execute(
+        `INSERT INTO PATIENT (USER_ID, DATE_OF_BIRTH, GENDER, OCCUPATION, BLOOD_TYPE, MARITAL_STATUS, ADDRESS)
+         VALUES (:userId, :dateOfBirth, :gender, :occupation, :bloodType, :maritalStatus, :address)`,
+        {
+          userId,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          gender: gender || null,
+          occupation: occupation || null,
+          bloodType: bloodType || null,
+          maritalStatus: maritalStatus || null,
+          address: address || null,
+        },
+        { autoCommit: true }
+      );
+    }
 
     return res.status(201).json({
       message: "✅ Patient profile created successfully",

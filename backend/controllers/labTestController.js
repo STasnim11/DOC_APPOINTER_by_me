@@ -21,7 +21,7 @@ exports.getAllLabTests = async (req, res) => {
         PREPARATION_REQUIRED,
         DURATION_MINUTES
       FROM LAB_TESTS
-      ORDER BY TEST_NAME`
+      ORDER BY ID ASC`
     );
 
     const labTests = result.rows.map(row => ({
@@ -579,7 +579,7 @@ exports.getAllLabTestAppointments = async (req, res) => {
       JOIN USERS u ON p.USER_ID = u.ID
       JOIN LAB_TESTS lt ON lta.TEST_ID = lt.ID
       LEFT JOIN MEDICAL_TECHNICIAN mt ON lta.TECHNICIAN_ID = mt.ID
-      ORDER BY lta.ID DESC`
+      ORDER BY lta.ID ASC`
     );
 
     const appointments = result.rows.map(row => ({

@@ -42,7 +42,6 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    console.log('👤 User data from localStorage:', userData);
     
     if (!userData.token || userData.role?.toUpperCase() !== 'PATIENT') {
       navigate('/login');
@@ -52,32 +51,25 @@ export default function PatientDashboard() {
     setUser(userData);
     
     if (userData.email) {
-      console.log('📧 Fetching profile for email:', userData.email);
       fetchPatientProfile(userData.email);
       fetchAppointments(userData.email);
     } else {
-      console.error('❌ No email in userData!');
       setMessage('❌ Session error - please login again');
     }
   }, [navigate]);
 
   const fetchPatientProfile = async (email) => {
-    console.log('🔍 Fetching profile for email:', email);
     try {
       const res = await fetch(`http://localhost:3000/api/patient/profile/${email}`);
-      console.log('📡 Profile fetch response status:', res.status);
       
       if (res.ok) {
         const data = await res.json();
-        console.log('✅ Profile data received:', data);
         setProfileData(data);
       } else {
         const error = await res.json();
-        console.error('❌ Profile fetch failed:', error);
         setMessage('❌ Failed to load profile: ' + error.error);
       }
     } catch (err) {
-      console.error('❌ Error fetching profile:', err);
       setMessage('❌ Error loading profile');
     }
   };
@@ -209,7 +201,6 @@ export default function PatientDashboard() {
       const res = await fetch(`http://localhost:3000/api/prescriptions/${prescriptionId}`);
       if (res.ok) {
         const data = await res.json();
-        console.log('Prescription data received:', data);
         
         // Backend returns { success: true, prescription: {...} }
         if (data.success && data.prescription) {
@@ -335,25 +326,17 @@ export default function PatientDashboard() {
 
   const fetchMyBedBookings = async () => {
     if (!user?.email) {
-      console.error('No user email available');
       return;
     }
     
     try {
-      console.log('Fetching bed bookings for:', user.email);
       const res = await fetch(`http://localhost:3000/api/patient/${user.email}/bed-bookings`);
-      console.log('Bed bookings response status:', res.status);
       
       if (res.ok) {
         const data = await res.json();
-        console.log('Bed bookings data:', data);
         setMyBedBookings(data.bookings || []);
-      } else {
-        const errorData = await res.json();
-        console.error('Failed to fetch bed bookings:', errorData);
       }
     } catch (err) {
-      console.error('Error fetching bed bookings:', err);
     }
   };
 
@@ -427,14 +410,41 @@ export default function PatientDashboard() {
     }
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    setModalMessage({
-      type: 'success',
-      title: 'Copied!',
-      message: 'Token copied to clipboard'
-    });
-    setShowModal(true);
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setModalMessage({
+        type: 'success',
+        title: 'Copied!',
+        message: 'Token copied to clipboard'
+      });
+      setShowModal(true);
+    } catch (err) {
+      // Fallback for older browsers or if clipboard API fails
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setModalMessage({
+          type: 'success',
+          title: 'Copied!',
+          message: 'Token copied to clipboard'
+        });
+        setShowModal(true);
+      } catch (err2) {
+        setModalMessage({
+          type: 'error',
+          title: 'Copy Failed',
+          message: 'Please copy the token manually'
+        });
+        setShowModal(true);
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   // Fetch lab tests on mount
@@ -446,10 +456,7 @@ export default function PatientDashboard() {
 
   // Fetch bed bookings when view changes to bedBookings
   useEffect(() => {
-    console.log('🛏️ activeView changed to:', activeView);
-    console.log('🛏️ user email:', user?.email);
     if (activeView === 'bedBookings' && user?.email) {
-      console.log('🛏️ Fetching bed bookings...');
       fetchMyBedBookings();
     }
   }, [activeView, user]);
@@ -460,13 +467,30 @@ export default function PatientDashboard() {
   };
 
   const getTodayAppointments = () => {
+    const now = new Date();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     return appointments.filter(apt => {
       const aptDate = new Date(apt.appointmentDate);
       aptDate.setHours(0, 0, 0, 0);
-      return aptDate.getTime() === today.getTime() && apt.status === 'BOOKED';
+      
+      // Check if appointment is today and BOOKED
+      if (aptDate.getTime() !== today.getTime() || apt.status !== 'BOOKED') {
+        return false;
+      }
+      
+      // Check if appointment time hasn't passed yet
+      if (apt.startTime) {
+        const [hours, minutes] = apt.startTime.split(':').map(Number);
+        const appointmentTime = new Date();
+        appointmentTime.setHours(hours, minutes, 0, 0);
+        
+        // Only show if appointment time is in the future
+        return appointmentTime > now;
+      }
+      
+      return true; // If no time specified, show it
     });
   };
 
@@ -545,7 +569,7 @@ export default function PatientDashboard() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000
+        zIndex: 2000
       }}>
         <div style={{
           background: 'white',
@@ -1004,9 +1028,14 @@ export default function PatientDashboard() {
                         🏥 {tech.department}
                       </p>
                     )}
-                    {tech.experienceYears && (
+                    {tech.experienceYears !== null && tech.experienceYears !== undefined && (
                       <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: '#6b7280' }}>
-                        📊 {tech.experienceYears} years experience
+                        📊 {tech.experienceYears} {tech.experienceYears === 1 ? 'year' : 'years'} experience
+                      </p>
+                    )}
+                    {tech.degrees && (
+                      <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                        🎓 {tech.degrees}
                       </p>
                     )}
                     {tech.email && (
@@ -1635,7 +1664,7 @@ export default function PatientDashboard() {
                           </button>
                         )}
                         
-                        <div style={{ 
+                        {apt.status !== 'CANCELLED' && (<div style={{ 
                           display: 'grid', 
                           gridTemplateColumns: '1fr 1fr', 
                           gap: '0.5rem', 
@@ -1676,7 +1705,7 @@ export default function PatientDashboard() {
                           >
                             🛏️ Book Bed
                           </button>
-                        </div>
+                        </div>)}
                       </div>
                     );
                   })}
@@ -1689,9 +1718,6 @@ export default function PatientDashboard() {
           {activeView === 'bedBookings' && (
             <div className="bed-bookings-view">
               <h1>My Bed Bookings</h1>
-              
-              {console.log('🛏️ Rendering bed bookings view, count:', myBedBookings.length)}
-              {console.log('🛏️ Bed bookings data:', myBedBookings)}
               
               {myBedBookings.length === 0 ? (
                 <div className="no-data">
@@ -1756,18 +1782,6 @@ export default function PatientDashboard() {
                           </p>
                         </div>
                       </div>
-                      
-                      {booking.startTime && booking.endTime && (
-                        <div style={{
-                          background: '#f3f4f6',
-                          padding: '0.75rem',
-                          borderRadius: '6px',
-                          fontSize: '0.875rem',
-                          color: '#4b5563'
-                        }}>
-                          <strong>Time Slot:</strong> {booking.startTime} - {booking.endTime}
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -1790,16 +1804,6 @@ export default function PatientDashboard() {
                       onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                       required
                     />
-                  </div>
-                  <div className="form-group">
-                    <label>Email</label>
-                    <input
-                      type="email"
-                      value={profileData.email || ''}
-                      disabled
-                      style={{ background: '#f0f0f0', cursor: 'not-allowed' }}
-                    />
-                    <small>Email cannot be changed</small>
                   </div>
                   <div className="form-group">
                     <label>Phone</label>
@@ -2023,6 +2027,37 @@ export default function PatientDashboard() {
                           </p>
                         </div>
                       </div>
+                      
+                      {test.status === 'COMPLETED' && test.testFileUrl && (
+                        <div style={{
+                          marginTop: '1rem',
+                          padding: '1rem',
+                          background: '#d1fae5',
+                          borderRadius: '8px',
+                          border: '1px solid #10b981'
+                        }}>
+                          <p style={{ margin: '0 0 0.5rem 0', color: '#065f46', fontWeight: '600', fontSize: '0.875rem' }}>
+                            ✅ Test Result Available
+                          </p>
+                          <a
+                            href={test.testFileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'inline-block',
+                              padding: '0.5rem 1rem',
+                              background: '#10b981',
+                              color: 'white',
+                              borderRadius: '6px',
+                              textDecoration: 'none',
+                              fontSize: '0.875rem',
+                              fontWeight: '600'
+                            }}
+                          >
+                            📄 View Test Result
+                          </a>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

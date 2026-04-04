@@ -172,6 +172,69 @@ export default function Home() {
         </button>
       </section>
 
+      {/* About Section */}
+      <section className="about-section" id="about">
+        <div className="about-container">
+          <div className="about-header">
+            <h2>About DOCAPPOINTER</h2>
+            <div className="about-divider"></div>
+          </div>
+          
+          <div className="about-content">
+            <div className="about-text">
+              <p className="about-intro">
+                Welcome to DOCAPPOINTER, your trusted healthcare companion in the digital age. We're revolutionizing the way patients connect with healthcare professionals, making quality medical care accessible to everyone, anytime, anywhere.
+              </p>
+              
+              <div className="about-features">
+                <div className="about-feature">
+                  <span className="feature-icon">🎯</span>
+                  <div>
+                    <h3>Our Mission</h3>
+                    <p>To bridge the gap between patients and healthcare providers through innovative technology, ensuring timely access to quality medical care for all.</p>
+                  </div>
+                </div>
+                
+                <div className="about-feature">
+                  <span className="feature-icon">💡</span>
+                  <div>
+                    <h3>Our Vision</h3>
+                    <p>To become the leading healthcare appointment platform, empowering patients with seamless access to medical services and enabling doctors to focus on what matters most - patient care.</p>
+                  </div>
+                </div>
+                
+                <div className="about-feature">
+                  <span className="feature-icon">⭐</span>
+                  <div>
+                    <h3>Why Choose Us</h3>
+                    <p>With DOCAPPOINTER, you get instant appointment booking, verified healthcare professionals, secure medical records, lab test scheduling, and 24/7 support - all in one platform.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="about-stats">
+                <div className="stat-item">
+                  <h3>500+</h3>
+                  <p>Qualified Doctors</p>
+                </div>
+                <div className="stat-item">
+                  <h3>10,000+</h3>
+                  <p>Happy Patients</p>
+                </div>
+                <div className="stat-item">
+                  <h3>50+</h3>
+                  <p>Specializations</p>
+                </div>
+                <div className="stat-item">
+                  <h3>24/7</h3>
+                  <p>Support Available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="home-footer" id="contact">
         <div className="footer-content">

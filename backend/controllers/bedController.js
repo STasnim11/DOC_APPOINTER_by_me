@@ -8,7 +8,7 @@ exports.getAllBeds = async (req, res) => {
     const result = await connection.execute(
       `SELECT id, bed_number, ward_name, bed_type, price_per_day, status, floor_number,
               TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at
-       FROM hospital_beds ORDER BY ward_name, bed_number`
+       FROM hospital_beds ORDER BY id ASC`
     );
     await connection.close();
 

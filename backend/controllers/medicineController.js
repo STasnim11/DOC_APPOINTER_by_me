@@ -9,7 +9,7 @@ exports.getAllMedicines = async (req, res) => {
       `SELECT id, name, description, manufacturer, price, stock_quantity, 
               TO_CHAR(expiry_date, 'YYYY-MM-DD') as expiry_date, category,
               TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at
-       FROM medicines ORDER BY created_at DESC`
+       FROM medicines ORDER BY id ASC`
     );
     await connection.close();
 

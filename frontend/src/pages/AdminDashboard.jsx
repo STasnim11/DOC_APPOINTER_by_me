@@ -14,8 +14,11 @@ export default function AdminDashboard() {
   const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [searchAdminId, setSearchAdminId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: '', phone: '' });
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState({ type: '', title: '', message: '' });
   const [showEditModal, setShowEditModal] = useState(false);
@@ -27,26 +30,71 @@ export default function AdminDashboard() {
     const userRole = user.role ? user.role.toUpperCase() : '';
     
     setCurrentUser(user);
-    console.log('User from localStorage:', user);
-    console.log('Has token:', !!user.token);
     
     if (userRole !== 'ADMIN') {
-      console.log('Not admin, redirecting to login');
       navigate('/login');
     }
   }, [navigate]);
 
   useEffect(() => {
     // Filter data when search changes
-    if (searchAdminId === '') {
+    if (searchAdminId === '' && searchQuery === '') {
       setFilteredData(data);
     } else {
-      const filtered = data.filter(item => 
-        item.adminId && item.adminId.toString().includes(searchAdminId)
-      );
+      const filtered = data.filter(item => {
+        // Admin ID filter
+        const matchesAdminId = searchAdminId === '' || 
+          (item.adminId && item.adminId.toString().includes(searchAdminId));
+        
+        // Contextual search filter based on module
+        let matchesSearch = true;
+        if (searchQuery !== '') {
+          const query = searchQuery.toLowerCase();
+          switch (selectedModule?.id) {
+            case 'departments':
+              matchesSearch = (item.name || '').toLowerCase().includes(query);
+              break;
+            case 'tests':
+              matchesSearch = (item.testName || '').toLowerCase().includes(query);
+              break;
+            case 'medical-technician':
+              matchesSearch = (item.name || '').toLowerCase().includes(query) || 
+                            (item.deptName || '').toLowerCase().includes(query);
+              break;
+            case 'beds':
+              matchesSearch = (item.bedNumber || '').toLowerCase().includes(query) || 
+                            (item.wardName || '').toLowerCase().includes(query);
+              break;
+            case 'medicines':
+              matchesSearch = (item.name || '').toLowerCase().includes(query);
+              break;
+            case 'hospital-branches':
+              matchesSearch = (item.name || '').toLowerCase().includes(query);
+              break;
+            case 'branch-contacts':
+              matchesSearch = (item.contactNo || '').toString().includes(query) || 
+                            (item.branchName || '').toLowerCase().includes(query);
+              break;
+            case 'lab-test-appointments':
+              matchesSearch = (item.token || '').toString().toLowerCase().includes(query) || 
+                            (item.patientName || '').toLowerCase().includes(query) ||
+                            (item.testName || '').toLowerCase().includes(query);
+              break;
+            case 'bed-bookings':
+              matchesSearch = (item.id || '').toString().includes(query) || 
+                            (item.patientName || '').toLowerCase().includes(query) ||
+                            (item.bedNumber || '').toLowerCase().includes(query);
+              break;
+            default:
+              matchesSearch = true;
+          }
+        }
+        
+        return matchesAdminId && matchesSearch;
+      });
       setFilteredData(filtered);
     }
-  }, [searchAdminId, data]);
+  }, [searchAdminId, searchQuery, data, selectedModule]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -71,7 +119,38 @@ export default function AdminDashboard() {
     setActiveView('view');
     setMessage('');
     setSearchAdminId('');
+    setSearchQuery('');
     fetchData(module.id);
+  };
+
+  const getSearchPlaceholder = () => {
+    switch (selectedModule?.id) {
+      case 'departments':
+        return 'Search by department name...';
+      case 'tests':
+        return 'Search by test name...';
+      case 'medical-technician':
+        return 'Search by name or department...';
+      case 'beds':
+        return 'Search by bed number or ward...';
+      case 'medicines':
+        return 'Search by medicine name...';
+      case 'hospital-branches':
+        return 'Search by branch name...';
+      case 'branch-contacts':
+        return 'Search by contact number or branch...';
+      case 'lab-test-appointments':
+        return 'Search by token, patient or test...';
+      case 'bed-bookings':
+        return 'Search by booking ID, patient or bed...';
+      default:
+        return 'Search...';
+    }
+  };
+
+  const hasAdminIdField = () => {
+    const modulesWithAdminId = ['departments', 'hospital-branches', 'branch-contacts', 'medical-technician'];
+    return modulesWithAdminId.includes(selectedModule?.id);
   };
 
   const handleSubAction = (action) => {
@@ -179,9 +258,6 @@ export default function AdminDashboard() {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const token = user.token;
       
-      console.log('Fetching data for:', moduleId);
-      console.log('Token exists:', !!token);
-      
       if (!token) {
         setMessage('❌ Please login again - no token found');
         setData([]);
@@ -208,17 +284,12 @@ export default function AdminDashboard() {
         return;
       }
 
-      console.log('Calling endpoint:', endpoint);
-
       const res = await fetch(`http://localhost:3000${endpoint}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      console.log('Response status:', res.status);
-
       if (res.ok) {
         const result = await res.json();
-        console.log('Response data:', result);
         
         // Handle different response formats
         if (result.beds) setData(result.beds);
@@ -917,7 +988,6 @@ export default function AdminDashboard() {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Admin ID</th>
                 <th>Bed Number</th>
                 <th>Ward Name</th>
                 <th>Bed Type</th>
@@ -928,13 +998,13 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {data.map((item) => (
+              {filteredData.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td>{item.bedNumber}</td>
                   <td>{item.wardName}</td>
                   <td>{item.bedType}</td>
-                  <td>${item.pricePerDay}</td>
+                  <td>₹{item.pricePerDay}</td>
                   <td>
                     <span style={{
                       padding: '4px 8px',
@@ -1053,7 +1123,7 @@ export default function AdminDashboard() {
             <tbody>
               {data.map((item) => (
                 <tr key={item.id}>
-                  <td style={{ fontWeight: 'bold', color: '#3498db' }}>{item.token}</td>
+                  <td style={{ fontWeight: 'bold', color: '#000000' }}>{item.token}</td>
                   <td>
                     <div>{item.patientName}</div>
                     <div style={{ fontSize: '12px', color: '#7f8c8d' }}>{item.patientEmail}</div>
@@ -1112,7 +1182,7 @@ export default function AdminDashboard() {
             <tbody>
               {data.map((item) => (
                 <tr key={item.id}>
-                  <td style={{ fontWeight: 'bold', color: '#3498db' }}>#{item.id}</td>
+                  <td style={{ fontWeight: 'bold', color: '#000000' }}>{item.id}</td>
                   <td>
                     <div>{item.patientName}</div>
                     <div style={{ fontSize: '12px', color: '#7f8c8d' }}>{item.patientEmail}</div>
@@ -1366,9 +1436,242 @@ export default function AdminDashboard() {
         message={modalMessage.message}
       />
       <EditLabTestModal />
+      
+      {/* Edit Profile Modal */}
+      {editingProfile && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '90%'
+          }}>
+            <h3 style={{ margin: '0 0 1.5rem 0' }}>Edit Profile</h3>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Name</label>
+              <input
+                type="text"
+                value={profileForm.name}
+                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem'
+                }}
+              />
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Phone</label>
+              <input
+                type="text"
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                maxLength="11"
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setEditingProfile(false)}
+                disabled={loading}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  background: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const res = await fetch('http://localhost:3000/api/profile/update', {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentUser.token}`
+                      },
+                      body: JSON.stringify({
+                        email: currentUser.email,
+                        name: profileForm.name,
+                        phone: profileForm.phone
+                      })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                      const updatedUser = { ...currentUser, name: profileForm.name, phone: profileForm.phone };
+                      setCurrentUser(updatedUser);
+                      localStorage.setItem('user', JSON.stringify(updatedUser));
+                      setEditingProfile(false);
+                      setModalMessage({
+                        type: 'success',
+                        title: 'Profile Updated',
+                        message: 'Your profile has been updated successfully.'
+                      });
+                      setShowModal(true);
+                    } else {
+                      setModalMessage({
+                        type: 'error',
+                        title: 'Update Failed',
+                        message: data.error || 'Failed to update profile'
+                      });
+                      setShowModal(true);
+                    }
+                  } catch (err) {
+                    console.error('Error updating profile:', err);
+                    setModalMessage({
+                      type: 'error',
+                      title: 'Error',
+                      message: 'Network error. Please try again.'
+                    });
+                    setShowModal(true);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: 'none',
+                  borderRadius: '6px',
+                  background: loading ? '#d1d5db' : '#667eea',
+                  color: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                {loading ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <header className="admin-header">
         <h1>Admin Dashboard</h1>
-        <button onClick={handleLogout} className="logout-btn">Logout</button>
+        <div style={{ position: 'relative' }}>
+          <div 
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '1.1rem',
+              cursor: 'pointer',
+              border: '2px solid white',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+          >
+            {currentUser?.name?.charAt(0).toUpperCase() || 'A'}
+          </div>
+          
+          {showProfileMenu && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: '0.5rem',
+              background: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid #e5e7eb',
+              minWidth: '220px',
+              zIndex: 1000
+            }}>
+              <div style={{ padding: '1rem', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>
+                  {currentUser?.name || 'Admin'}
+                </div>
+                
+                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+                  Administrator
+                </div>
+                
+                <div style={{ fontSize: '0.875rem', color: '#1f2937', marginBottom: '0.5rem' }}>
+                  {currentUser?.email || 'admin@example.com'}
+                </div>
+                
+                <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>
+                  {currentUser?.phone || 'N/A'}
+                </div>
+              </div>
+              
+              <div style={{ padding: '0.5rem' }}>
+                <div
+                  onClick={() => {
+                    setEditingProfile(true);
+                    setProfileForm({ name: currentUser?.name || '', phone: currentUser?.phone || '' });
+                    setShowProfileMenu(false);
+                  }}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#1f2937',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    borderRadius: '4px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span>✏️</span> Edit Profile
+                </div>
+                <div
+                  onClick={handleLogout}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#ef4444',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    borderRadius: '4px'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#fef2f2'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <span>🚪</span> Logout
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="admin-content">
@@ -1401,13 +1704,16 @@ export default function AdminDashboard() {
               <span className="sub-icon">👁️</span>
               <span>View</span>
             </div>
-            <div
-              className={`sub-sidebar-item ${activeView === 'add' ? 'active' : ''}`}
-              onClick={() => handleSubAction('add')}
-            >
-              <span className="sub-icon">➕</span>
-              <span>Add</span>
-            </div>
+            {selectedModule.id !== 'lab-test-appointments' && 
+             selectedModule.id !== 'bed-bookings' && (
+              <div
+                className={`sub-sidebar-item ${activeView === 'add' ? 'active' : ''}`}
+                onClick={() => handleSubAction('add')}
+              >
+                <span className="sub-icon">➕</span>
+                <span>Add</span>
+              </div>
+            )}
           </aside>
         )}
 
@@ -1423,6 +1729,71 @@ export default function AdminDashboard() {
               <div className="content-header">
                 <h2>{selectedModule.name} - {activeView === 'view' ? 'View' : 'Add New'}</h2>
               </div>
+              
+              {activeView === 'view' && (
+                <div style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  padding: '1rem',
+                  background: '#f9fafb',
+                  borderRadius: '8px',
+                  flexWrap: 'wrap'
+                }}>
+                  {hasAdminIdField() && (
+                    <div style={{ flex: '1', minWidth: '200px' }}>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '0.5rem', 
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        color: '#374151'
+                      }}>
+                        Filter by Admin ID
+                      </label>
+                      <input
+                        type="text"
+                        value={searchAdminId}
+                        onChange={(e) => setSearchAdminId(e.target.value)}
+                        placeholder="Enter Admin ID..."
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div style={{ flex: '2', minWidth: '250px' }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5rem', 
+                      fontSize: '0.875rem',
+                      fontWeight: '500',
+                      color: '#374151'
+                    }}>
+                      Search
+                    </label>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={getSearchPlaceholder()}
+                      style={{
+                        width: '100%',
+                        padding: '0.5rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               
               <div className="content-body">
                 {activeView === 'view' ? (

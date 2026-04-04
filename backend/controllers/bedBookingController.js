@@ -176,7 +176,7 @@ exports.getAllBedBookings = async (req, res) => {
       JOIN USERS du ON d.USER_ID = du.ID
       JOIN PATIENT p ON da.PATIENT_ID = p.ID
       JOIN USERS pu ON p.USER_ID = pu.ID
-      ORDER BY da.APPOINTMENT_DATE DESC`
+      ORDER BY bba.ID ASC`
     );
 
     const bookings = result.rows.map(row => ({
@@ -270,7 +270,7 @@ exports.getPatientBedBookings = async (req, res) => {
       JOIN HOSPITAL_BEDS hb ON bba.BED_ID = hb.ID
       JOIN DOCTORS_APPOINTMENTS da ON bba.DOCTOR_APPOINTMENT_ID = da.ID
       WHERE da.PATIENT_ID = :patientId
-      ORDER BY da.APPOINTMENT_DATE DESC`,
+      ORDER BY bba.ID ASC`,
       { patientId }
     );
 

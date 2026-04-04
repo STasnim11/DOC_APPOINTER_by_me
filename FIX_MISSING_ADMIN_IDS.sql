@@ -1,0 +1,31 @@
+-- Check departments without ADMIN_ID
+SELECT ID, NAME, ADMIN_ID 
+FROM DEPARTMENTS 
+WHERE ADMIN_ID IS NULL;
+
+-- Check hospital branches without ADMIN_ID
+SELECT ID, NAME, ADMIN_ID 
+FROM HOSPITAL_BRANCHES 
+WHERE ADMIN_ID IS NULL;
+
+-- Fix: Update departments with missing ADMIN_ID
+-- Assign to the first available admin (admin@gmail.com with ADMIN.ID = 1)
+UPDATE DEPARTMENTS 
+SET ADMIN_ID = 1 
+WHERE ADMIN_ID IS NULL;
+
+-- Fix: Update hospital branches with missing ADMIN_ID
+UPDATE HOSPITAL_BRANCHES 
+SET ADMIN_ID = 1 
+WHERE ADMIN_ID IS NULL;
+
+-- Verify the fix
+SELECT 'DEPARTMENTS' as TABLE_NAME, ID, NAME, ADMIN_ID 
+FROM DEPARTMENTS 
+WHERE ID = 1
+UNION ALL
+SELECT 'HOSPITAL_BRANCHES' as TABLE_NAME, ID, NAME, ADMIN_ID 
+FROM HOSPITAL_BRANCHES 
+WHERE ID = 1;
+
+COMMIT;
