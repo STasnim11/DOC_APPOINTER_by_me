@@ -9,7 +9,7 @@ exports.getDoctorProfile = async (req, res) => {
   console.log('Email parameter:', email);
 
   if (!email) {
-    return res.status(400).json({ error: "❌ Email is required" });
+    return res.status(400).json({ error: "Email is required" });
   }
 
   try {
@@ -28,7 +28,7 @@ exports.getDoctorProfile = async (req, res) => {
 
     if (userResult.rows.length === 0) {
       console.log('No user found for email:', email);
-      return res.status(404).json({ error: "❌ Doctor not found" });
+      return res.status(404).json({ error: "Doctor not found" });
     }
 
     const [userId, name, userEmail, phone] = userResult.rows[0];
@@ -139,7 +139,7 @@ exports.getDoctorProfile = async (req, res) => {
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
     return res.status(500).json({ 
-      error: "❌ Failed to fetch doctor profile",
+      error: "Failed to fetch doctor profile",
       details: error.message 
     });
   } finally {
@@ -160,7 +160,7 @@ exports.saveDoctorAvailability = async (req, res) => {
   let connection;
 
   if (!email || !availability) {
-    return res.status(400).json({ error: "❌ Email and availability are required" });
+    return res.status(400).json({ error: "Email and availability are required" });
   }
 
   try {
@@ -177,7 +177,7 @@ exports.saveDoctorAvailability = async (req, res) => {
     );
 
     if (doctorResult.rows.length === 0) {
-      return res.status(404).json({ error: "❌ Doctor not found" });
+      return res.status(404).json({ error: "Doctor not found" });
     }
 
     const doctorId = doctorResult.rows[0][0];
@@ -206,7 +206,7 @@ exports.saveDoctorAvailability = async (req, res) => {
 
     await connection.commit();
 
-    return res.status(200).json({ message: "✅ Availability updated successfully" });
+    return res.status(200).json({ message: "Availability updated successfully" });
 
   } catch (error) {
     console.error("Save doctor availability error:", error);
@@ -215,7 +215,7 @@ exports.saveDoctorAvailability = async (req, res) => {
         await connection.rollback();
       } catch (_) {}
     }
-    return res.status(500).json({ error: "❌ Failed to save availability" });
+    return res.status(500).json({ error: "Failed to save availability" });
   } finally {
     if (connection) {
       try {
@@ -248,7 +248,7 @@ exports.updateDoctorProfile = async (req, res) => {
     branchId === undefined
   ) {
     return res.status(400).json({
-      error: "❌ email, licenseNumber, degrees, experienceYears, deptId, and branchId are required",
+      error: "email, licenseNumber, degrees, experienceYears, deptId, and branchId are required",
     });
   }
 
@@ -267,7 +267,7 @@ exports.updateDoctorProfile = async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        error: "❌ Doctor profile not found for this email",
+        error: "Doctor profile not found for this email",
       });
     }
 
@@ -294,7 +294,7 @@ exports.updateDoctorProfile = async (req, res) => {
     await connection.commit();
 
     return res.status(200).json({
-      message: "✅ Doctor profile updated successfully",
+      message: "Doctor profile updated successfully",
       doctorId,
     });
   } catch (error) {
@@ -307,7 +307,7 @@ exports.updateDoctorProfile = async (req, res) => {
     }
 
     return res.status(500).json({
-      error: "❌ Failed to update doctor profile",
+      error: "Failed to update doctor profile",
     });
   } finally {
     if (connection) {
@@ -327,7 +327,7 @@ exports.updateDoctorLicense = async (req, res) => {
 
   if (!email || !licenseNumber) {
     return res.status(400).json({
-      error: "❌ Email and license number are required",
+      error: "Email and license number are required",
     });
   }
 
@@ -336,13 +336,13 @@ exports.updateDoctorLicense = async (req, res) => {
   
   if (trimmedLicense.length < 5 || trimmedLicense.length > 20) {
     return res.status(400).json({
-      error: "❌ License number must be 5-20 characters long",
+      error: "License number must be 5-20 characters long",
     });
   }
   
   if (!/^[A-Z0-9]+$/.test(trimmedLicense)) {
     return res.status(400).json({
-      error: "❌ License number can only contain letters and numbers",
+      error: "License number can only contain letters and numbers",
     });
   }
 
@@ -362,7 +362,7 @@ exports.updateDoctorLicense = async (req, res) => {
       const existingEmail = licenseCheck.rows[0][1];
       if (existingEmail.toLowerCase() !== email.toLowerCase()) {
         return res.status(400).json({
-          error: "❌ This license number is already registered to another doctor",
+          error: "This license number is already registered to another doctor",
         });
       }
     }
@@ -379,7 +379,7 @@ exports.updateDoctorLicense = async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        error: "❌ Doctor profile not found",
+        error: "Doctor profile not found",
       });
     }
 
@@ -408,7 +408,7 @@ exports.updateDoctorLicense = async (req, res) => {
     }
 
     return res.status(500).json({
-      error: "❌ Failed to update license number",
+      error: "Failed to update license number",
     });
   } finally {
     if (connection) {
@@ -543,7 +543,7 @@ exports.updateDoctorBasicInfo = async (req, res) => {
 
   if (!email) {
     return res.status(400).json({
-      error: "❌ Email is required",
+      error: "Email is required",
     });
   }
 
@@ -562,7 +562,7 @@ exports.updateDoctorBasicInfo = async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        error: "❌ Doctor profile not found",
+        error: "Doctor profile not found",
       });
     }
 
@@ -633,7 +633,7 @@ exports.updateDoctorBasicInfo = async (req, res) => {
     await connection.commit();
 
     return res.status(200).json({
-      message: "✅ Profile updated successfully",
+      message: "Profile updated successfully",
     });
   } catch (error) {
     console.error("Update doctor basic info error:", error);
@@ -646,7 +646,7 @@ exports.updateDoctorBasicInfo = async (req, res) => {
     }
 
     return res.status(500).json({
-      error: "❌ Failed to update profile: " + error.message,
+      error: "Failed to update profile: " + error.message,
     });
   } finally {
     if (connection) {

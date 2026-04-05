@@ -23,17 +23,27 @@ export default function DoctorLicenseVerification() {
     setMessage('');
     setLoading(true);
 
+    // Get fresh user data from localStorage
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    if (!userData.email || !userData.token) {
+      setMessage('Session expired. Please login again.');
+      setLoading(false);
+      navigate('/login');
+      return;
+    }
+
     const trimmedLicense = licenseNumber.trim().toUpperCase();
 
     // Validate format
     if (trimmedLicense.length < 5 || trimmedLicense.length > 20) {
-      setMessage('❌ License must be 5-20 characters long');
+      setMessage('License must be 5-20 characters long');
       setLoading(false);
       return;
     }
 
     if (!/^[A-Z0-9]+$/.test(trimmedLicense)) {
-      setMessage('❌ License can only contain letters and numbers (no spaces or special characters)');
+      setMessage('License can only contain letters and numbers (no spaces or special characters)');
       setLoading(false);
       return;
     }
@@ -42,10 +52,11 @@ export default function DoctorLicenseVerification() {
       const res = await fetch('http://localhost:3000/api/doctor/license', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userData.token}`
         },
         body: JSON.stringify({
-          email: user.email,
+          email: userData.email,
           licenseNumber: trimmedLicense
         })
       });
@@ -53,16 +64,16 @@ export default function DoctorLicenseVerification() {
       const result = await res.json();
 
       if (res.ok) {
-        setMessage('✅ ' + result.message);
+        setMessage(result.message);
         setTimeout(() => {
           navigate('/doctor/dashboard');
         }, 1500);
       } else {
-        setMessage('❌ ' + (result.error || 'Failed to verify license'));
+        setMessage(result.error || 'Failed to verify license');
       }
     } catch (err) {
       console.error('Error submitting license:', err);
-      setMessage('❌ Server error. Please try again.');
+      setMessage('Server error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -136,7 +147,7 @@ export default function DoctorLicenseVerification() {
               </button>
 
               {message && (
-                <div className={`auth-message ${message.includes('✅') ? 'success' : 'error'}`}>
+                <div className={`auth-message ${message.includes('successfully') || message.includes('updated') ? 'success' : 'error'}`}>
                   {message}
                 </div>
               )}

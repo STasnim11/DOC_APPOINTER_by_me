@@ -7,7 +7,8 @@ const branchContactsController = require('../controllers/branchContactsControlle
 const hospitalBranchesController = require('../controllers/hospitalBranchesController');
 const medicalTechnicianController = require('../controllers/medicalTechnicianController');
 const departmentController = require('../controllers/departmentController');
-const analyticsController = require('../controllers/analyticsController');
+// DEAD CODE: analyticsController is not used - all analytics routes commented out
+// const analyticsController = require('../controllers/analyticsController');
 const bedController = require('../controllers/bedController');
 const labTestController = require('../controllers/labTestController');
 const medicineController = require('../controllers/medicineController');
@@ -41,12 +42,16 @@ router.post('/departments', departmentController.addDepartment);
 router.put('/departments/:id', departmentController.updateDepartment);
 router.delete('/departments/:id', departmentController.deleteDepartment);
 
-// Analytics Routes (Complex Queries)
-router.get('/analytics/department-statistics', analyticsController.getDepartmentStatistics);
-router.get('/analytics/branch-allocation', analyticsController.getBranchResourceAllocation);
-router.get('/analytics/top-doctors', analyticsController.getTopDoctors);
-router.get('/analytics/medicine-usage', analyticsController.getMedicineUsageAnalysis);
-router.get('/analytics/patient-summary', analyticsController.getPatientTreatmentSummary);
+// ============================================
+// DEAD CODE: Analytics Routes (Complex Queries)
+// These routes exist but are NOT used in the frontend
+// The frontend uses /db-features/stats instead
+// ============================================
+// router.get('/analytics/department-statistics', analyticsController.getDepartmentStatistics);
+// router.get('/analytics/branch-allocation', analyticsController.getBranchResourceAllocation);
+// router.get('/analytics/top-doctors', analyticsController.getTopDoctors);
+// router.get('/analytics/medicine-usage', analyticsController.getMedicineUsageAnalysis);
+// router.get('/analytics/patient-summary', analyticsController.getPatientTreatmentSummary);
 
 // Database Features Routes (Functions & Procedures)
 router.get('/db-features/stats', databaseFeaturesController.getDatabaseFeaturesStats);

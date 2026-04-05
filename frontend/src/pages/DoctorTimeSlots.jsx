@@ -39,12 +39,12 @@ export default function DoctorTimeSlots() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage("✅ Time slot saved successfully");
+        setMessage("Time slot saved successfully");
       } else {
-        setMessage(data.error || "❌ Failed to save");
+        setMessage(data.error || "Failed to save");
       }
     } catch {
-      setMessage("❌ Server error");
+      setMessage("Server error");
     }
   };
 

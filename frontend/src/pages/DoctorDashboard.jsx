@@ -35,7 +35,8 @@ export default function DoctorDashboard() {
     degrees: '',
     experienceYears: '',
     fees: '',
-    specializationId: ''
+    specializationId: '',
+    license: ''
   });
   
   const [schedule, setSchedule] = useState({
@@ -106,7 +107,8 @@ export default function DoctorDashboard() {
           degrees: data.degrees || '',
           experienceYears: data.experienceYears || '',
           fees: data.fees || '',
-          specializationId: data.specializationId || ''
+          specializationId: data.specializationId || '',
+          license: data.license && data.license !== 'Not provided' ? data.license : ''
         });
         
         // Check if license exists - redirect to verification if not
@@ -132,10 +134,15 @@ export default function DoctorDashboard() {
   // };
 const fetchSpecializations = async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/doctor/specializations'); // ✅ was /api/specialties
+    const res = await fetch('http://localhost:3000/api/specialties');
     if (res.ok) {
       const data = await res.json();
-      setSpecializations(data); // ✅ already a plain array [{ID, NAME}]
+      // Map to format expected by dropdown: {ID, NAME}
+      const mapped = (data.specialties || []).map(spec => ({
+        ID: spec.id,
+        NAME: spec.name
+      }));
+      setSpecializations(mapped);
     }
   } catch (err) {
     console.error('Error fetching specializations:', err);
@@ -563,7 +570,7 @@ const handleCompleteAppointment = async (appointmentId) => {
 
         {/* Main Content */}
         <main className="doctor-main">
-          {message && <div className={`doctor-message ${message.includes('✅') ? 'success' : 'error'}`}>{message}</div>}
+          {message && <div className={`doctor-message ${message.includes('successfully') || message.includes('completed') ? 'success' : 'error'}`}>{message}</div>}
 
           {/* Appointments View */}
           {activeView === 'appointments' && (
@@ -966,6 +973,29 @@ const handleCompleteAppointment = async (appointmentId) => {
                   </div>
 
                   <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>License Number</label>
+                    <input
+                      type="text"
+                      value={editForm.license}
+                      onChange={(e) => setEditForm({...editForm, license: e.target.value.toUpperCase()})}
+                      placeholder="e.g., BM12345"
+                      maxLength="20"
+                      className="auth-input"
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.75rem', 
+                        border: '1px solid #d1d5db', 
+                        borderRadius: '8px',
+                        fontFamily: 'Courier New, monospace',
+                        letterSpacing: '1px'
+                      }}
+                    />
+                    <small style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem', display: 'block' }}>
+                      5-20 characters, letters and numbers only
+                    </small>
+                  </div>
+
+                  <div className="auth-input-group" style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.5rem' }}>Specialization</label>
                     <select
                       value={editForm.specializationId}
@@ -973,7 +1003,7 @@ const handleCompleteAppointment = async (appointmentId) => {
                       className="auth-input"
                       style={{ width: '100%', padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '8px' }}
                     >
-                      <option value="">Select specialization</option>
+                      <option value="" disabled>Select specialization</option>
                       {Array.isArray(specializations) && specializations.map(spec => (
                         <option key={spec.ID} value={spec.ID}>{spec.NAME}</option>
                       ))}
@@ -1020,7 +1050,7 @@ const handleCompleteAppointment = async (appointmentId) => {
                   </div>
 
                   {message && (
-                    <div className={`doctor-message ${message.includes('✅') ? 'success' : 'error'}`}>
+                    <div className={`doctor-message ${message.includes('successfully') ? 'success' : 'error'}`}>
                       {message}
                     </div>
                   )}
@@ -1034,15 +1064,30 @@ const handleCompleteAppointment = async (appointmentId) => {
                         
                         // Validate
                         if (!editForm.name || !editForm.phone) {
-                          setMessage('❌ Name and phone are required');
+                          setMessage('Name and phone are required');
                           setLoading(false);
                           return;
                         }
                         
                         if (editForm.phone && !/^\d{11}$/.test(editForm.phone)) {
-                          setMessage('❌ Phone must be 11 digits');
+                          setMessage('Phone must be 11 digits');
                           setLoading(false);
                           return;
+                        }
+
+                        // Validate license if provided
+                        if (editForm.license) {
+                          const trimmedLicense = editForm.license.trim();
+                          if (trimmedLicense.length < 5 || trimmedLicense.length > 20) {
+                            setMessage('License number must be 5-20 characters');
+                            setLoading(false);
+                            return;
+                          }
+                          if (!/^[A-Z0-9]+$/.test(trimmedLicense)) {
+                            setMessage('License number can only contain letters and numbers');
+                            setLoading(false);
+                            return;
+                          }
                         }
 
                         try {
@@ -1059,7 +1104,7 @@ const handleCompleteAppointment = async (appointmentId) => {
 
                           if (!userRes.ok) {
                             const error = await userRes.json();
-                            setMessage('❌ ' + (error.error || 'Failed to update profile'));
+                            setMessage(error.error || 'Failed to update profile');
                             setLoading(false);
                             return;
                           }
@@ -1079,7 +1124,7 @@ const handleCompleteAppointment = async (appointmentId) => {
 
                           if (!doctorRes.ok) {
                             const error = await doctorRes.json();
-                            setMessage('❌ ' + (error.error || 'Failed to update doctor profile'));
+                            setMessage(error.error || 'Failed to update doctor profile');
                             setLoading(false);
                             return;
                           }
@@ -1097,13 +1142,32 @@ const handleCompleteAppointment = async (appointmentId) => {
 
                             if (!specRes.ok) {
                               const error = await specRes.json();
-                              setMessage('❌ ' + (error.error || 'Failed to update specialization'));
+                              setMessage(error.error || 'Failed to update specialization');
                               setLoading(false);
                               return;
                             }
                           }
 
-                          setMessage('✅ Profile updated successfully');
+                          // Update license if provided
+                          if (editForm.license && editForm.license.trim()) {
+                            const licenseRes = await fetch('http://localhost:3000/api/doctor/license', {
+                              method: 'PUT',
+                              headers: getAuthHeaders(),
+                              body: JSON.stringify({
+                                email: user.email,
+                                licenseNumber: editForm.license.trim()
+                              })
+                            });
+
+                            if (!licenseRes.ok) {
+                              const error = await licenseRes.json();
+                              setMessage(error.error || 'Failed to update license');
+                              setLoading(false);
+                              return;
+                            }
+                          }
+
+                          setMessage('Profile updated successfully');
                           
                           // Update localStorage
                           const updatedUser = {...user, name: editForm.name, phone: editForm.phone};
@@ -1118,7 +1182,7 @@ const handleCompleteAppointment = async (appointmentId) => {
                             setActiveView('profile');
                           }, 2000);
                         } catch (err) {
-                          setMessage('❌ Server error');
+                          setMessage('Server error');
                         } finally {
                           setLoading(false);
                         }

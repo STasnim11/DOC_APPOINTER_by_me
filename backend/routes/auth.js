@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { signup, login } = require("../controllers/authController");
-const {login: oldLogin}=require("../controllers/login");
+// DEAD CODE: Old login controller replaced by authController
+// const {login: oldLogin}=require("../controllers/login");
 const { getProfile, updateProfile } = require("../controllers/profile");
 const timetableController = require("../controllers/timetable");
 const appointmentController = require("../controllers/appointmentController");
@@ -9,7 +10,8 @@ const patientAppointmentsController = require("../controllers/patientAppointment
 const doctorAppointmentsController = require("../controllers/doctorAppointments");
 const doctorProfileController = require("../controllers/doctorProfileUpdate");
 const { saveDoctorSpecialization } = require("../controllers/doctorSpecialization");
-const doctorRoutes = require("./doctorRoutes");
+// DEAD CODE: doctorRoutes file is unused - all doctor routes are in this file
+// const doctorRoutes = require("./doctorRoutes");
 const patientProfileUpdate = require("../controllers/patientProfileUpdate");
 const { authenticateToken, requirePatient, requireDoctor } = require("../middleware/auth");
 
@@ -74,7 +76,8 @@ router.get("/doctor/appointments/:email", requireDoctor, doctorAppointmentsContr
 router.get("/doctor/appointments/:email/today-count", requireDoctor, doctorAppointmentsController.getTodayAppointmentsCount);
 router.get("/doctor/profile/:email", requireDoctor, doctorProfileController.getDoctorProfile);
 router.put("/doctor/appointments/:id/complete", requireDoctor, doctorAppointmentsController.completeAppointment);
-router.put("/doctor/profile", requireDoctor, doctorProfileController.updateDoctorProfile);
+// DEAD CODE: Duplicate route - use /doctor/profile/update instead
+// router.put("/doctor/profile", requireDoctor, doctorProfileController.updateDoctorProfile);
 router.put("/doctor/profile/update", requireDoctor, doctorProfileController.updateDoctorBasicInfo);
 router.put("/doctor/license", requireDoctor, doctorProfileController.updateDoctorLicense);
 router.post("/doctor/specialization", requireDoctor, saveDoctorSpecialization);

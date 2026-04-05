@@ -6,6 +6,7 @@ const connectDB = require('../db/connection');
  * GET /api/lab-tests
  */
 exports.getAllLabTests = async (req, res) => {
+  console.log('🔬 getAllLabTests controller hit!');
   let connection;
   
   try {
@@ -58,6 +59,7 @@ exports.getAllLabTests = async (req, res) => {
  * GET /api/medical-technicians
  */
 exports.getAllTechnicians = async (req, res) => {
+  console.log('👨‍⚕️ getAllTechnicians controller hit!');
   let connection;
   
   try {
@@ -65,29 +67,23 @@ exports.getAllTechnicians = async (req, res) => {
 
     const result = await connection.execute(
       `SELECT 
-        mt.ID,
-        mt.NAME,
-        mt.EMAIL,
-        mt.PHONE,
-        mt.DEGREES,
-        mt.EXPERIENCE_YEARS,
-        d.NAME as DEPT_NAME,
-        hb.NAME as BRANCH_NAME
-      FROM MEDICAL_TECHNICIAN mt
-      LEFT JOIN DEPARTMENTS d ON mt.DEPT_ID = d.ID
-      LEFT JOIN HOSPITAL_BRANCHES hb ON mt.BRANCH_ID = hb.ID
-      ORDER BY mt.NAME`
+        ID,
+        NAME,
+        EMAIL,
+        DEGREES,
+        EXPERIENCE_YEARS,
+        DEPT_ID
+      FROM MEDICAL_TECHNICIAN
+      ORDER BY NAME`
     );
 
     const technicians = result.rows.map(row => ({
       id: row[0],
       name: row[1],
       email: row[2],
-      phone: row[3],
-      degrees: row[4],
-      experienceYears: row[5],
-      department: row[6],
-      branch: row[7]
+      degrees: row[3],
+      experienceYears: row[4],
+      deptId: row[5]
     }));
 
     res.json({

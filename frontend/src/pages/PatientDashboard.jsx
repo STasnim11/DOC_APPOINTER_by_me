@@ -235,7 +235,7 @@ export default function PatientDashboard() {
     setSelectedTechnician(null);
     setLabTestToken(null);
     
-    // Fetch lab tests and technicians
+    // Fetch lab tests and technicians (public routes, no auth needed)
     try {
       const [testsRes, techsRes] = await Promise.all([
         fetch('http://localhost:3000/api/lab-tests'),
@@ -244,12 +244,18 @@ export default function PatientDashboard() {
       
       if (testsRes.ok) {
         const testsData = await testsRes.json();
+        console.log('Lab tests loaded:', testsData);
         setLabTests(testsData.labTests || []);
+      } else {
+        console.error('Failed to load lab tests:', testsRes.status);
       }
       
       if (techsRes.ok) {
         const techsData = await techsRes.json();
+        console.log('Technicians loaded:', techsData);
         setTechnicians(techsData.technicians || []);
+      } else {
+        console.error('Failed to load technicians:', techsRes.status);
       }
     } catch (err) {
       console.error('Error loading lab test data:', err);

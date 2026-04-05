@@ -1,3 +1,12 @@
+///DEAD CODE
+// ============================================
+// DEAD CODE - ENTIRE FILE UNUSED
+// ============================================
+// This file is replaced by authController.js
+// Imported in routes/auth.js as 'oldLogin' but never used
+// Can be safely deleted
+// ============================================
+
 console.log("login.js file loaded!");
 const bcrypt = require("bcrypt");
 const connectDB = require("../db/connection");

@@ -1,3 +1,13 @@
+//DEAD CODE
+// ============================================
+// DEAD CODE - ENTIRE FILE UNUSED
+// ============================================
+// This file is imported in routes/auth.js but never used
+// All doctor routes are already defined in routes/auth.js
+// This file was mounted in server.js at /api/doctor but creates duplicate routes
+// Can be safely deleted
+// ============================================
+
 // routes/doctorRoutes.js
 const express = require("express");
 const router = express.Router();

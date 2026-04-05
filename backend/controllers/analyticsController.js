@@ -1,3 +1,12 @@
+// ============================================
+// DEAD CODE - ALL FUNCTIONS IN THIS FILE ARE UNUSED
+// ============================================
+// These 5 complex query functions are NOT called from the frontend
+// The frontend uses /db-features/stats instead (which uses SQL functions)
+// These routes are commented out in adminRoutes.js
+// This file can be kept for future use or deleted
+// ============================================
+
 const connectDB = require('../db/connection');
 
 // Complex Query 1: Department-wise doctor and technician statistics

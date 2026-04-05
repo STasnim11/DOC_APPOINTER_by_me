@@ -10,7 +10,8 @@ app.use(express.json());
 
 // Routes
 const authRoutes = require('./routes/auth');
-const doctorRoutes = require('./routes/doctorRoutes');
+// DEAD CODE: doctorRoutes file is unused - all doctor routes are in auth.js
+// const doctorRoutes = require('./routes/doctorRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const labTestRoutes = require('./routes/labTestRoutes');
 const bedBookingRoutes = require('./routes/bedBookingRoutes');
@@ -24,11 +25,15 @@ try {
   console.error(error.stack);
 }
 
-app.use('/api', authRoutes);
-app.use('/api/doctor', doctorRoutes);
-app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api', labTestRoutes);
+console.log('✅ Lab test routes mounted at /api');
 app.use('/api', bedBookingRoutes);
+console.log('✅ Bed booking routes mounted at /api');
+app.use('/api', authRoutes);
+console.log('✅ Auth routes mounted at /api');
+// DEAD CODE: doctorRoutes mounted here but all routes already in auth.js at /api/doctor/*
+// app.use('/api/doctor', doctorRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
 if (adminRoutes) {
   app.use('/api/admin', adminRoutes);
   console.log('✅ Admin routes mounted at /api/admin');

@@ -76,16 +76,16 @@ export default function WritePrescription() {
       const result = await res.json();
 
       if (res.ok) {
-        setMessage("✅ Prescription created successfully!");
+        setMessage("Prescription created successfully!");
         setTimeout(() => {
           navigate('/doctor/dashboard');
         }, 2000);
       } else {
-        setMessage("❌ " + (result.message || "Failed to create prescription"));
+        setMessage((result.message || "Failed to create prescription"));
       }
     } catch (err) {
       console.error('Error creating prescription:', err);
-      setMessage("❌ Server error");
+      setMessage("Server error");
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ export default function WritePrescription() {
         </div>
 
         {message && (
-          <div className={`prescription-message ${message.includes('✅') ? 'success' : 'error'}`}>
+          <div className={`prescription-message ${message.includes('successfully') ? 'success' : 'error'}`}>
             {message}
           </div>
         )}

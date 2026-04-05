@@ -30,23 +30,38 @@ export default function PatientSetup() {
     setMessage('');
 
     try {
-      console.log('Fetching user profile for:', user.email);
-      const userResult = await fetch(`http://localhost:3000/api/profile/${user.email}`);
+      // Get fresh user data from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (!userData.email || !userData.token) {
+        setMessage('Session expired. Please login again.');
+        setLoading(false);
+        navigate('/login');
+        return;
+      }
+
+      console.log('Fetching user profile for:', userData.email);
+      const userResult = await fetch(`http://localhost:3000/api/profile/${userData.email}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userData.token}`
+        }
+      });
       
       if (!userResult.ok) {
-        setMessage('❌ Failed to get user ID');
+        setMessage('Failed to get user ID');
         setLoading(false);
         return;
       }
 
-      const userData = await userResult.json();
-      console.log('User data received:', userData);
+      const userProfile = await userResult.json();
+      console.log('User data received:', userProfile);
       
-      const userId = userData.id;
+      const userId = userProfile.id;
       console.log('User ID:', userId);
 
       if (!userId) {
-        setMessage('❌ User ID not found');
+        setMessage('User ID not found');
         setLoading(false);
         return;
       }
@@ -60,7 +75,8 @@ export default function PatientSetup() {
       const res = await fetch('http://localhost:3000/api/patient-profile', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userData.token}`
         },
         body: JSON.stringify(payload)
       });
@@ -69,16 +85,16 @@ export default function PatientSetup() {
       console.log('Response:', result);
 
       if (res.ok) {
-        setMessage('✅ Profile setup complete!');
+        setMessage('Profile setup complete!');
         setTimeout(() => {
           navigate('/patient/dashboard');
         }, 1000);
       } else {
-        setMessage('❌ ' + (result.error || 'Failed to setup profile'));
+        setMessage((result.error || 'Failed to setup profile'));
       }
     } catch (err) {
       console.error('Error setting up profile:', err);
-      setMessage('❌ Server error: ' + err.message);
+      setMessage('Server error: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -126,8 +142,8 @@ export default function PatientSetup() {
             padding: '1rem',
             borderRadius: '8px',
             marginBottom: '1.5rem',
-            background: message.includes('✅') ? '#d1fae5' : '#fee2e2',
-            color: message.includes('✅') ? '#065f46' : '#991b1b',
+            background: message.includes('complete') || message.includes('successfully') ? '#d1fae5' : '#fee2e2',
+            color: message.includes('complete') || message.includes('successfully') ? '#065f46' : '#991b1b',
             textAlign: 'center'
           }}>
             {message}
