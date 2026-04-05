@@ -41,7 +41,7 @@ npm run dev
 
 - **3 Functions**: Statistical calculations
 - **1 Procedure**: Multi-step workflow  
-- **1 Trigger**: Audit logging
+- **2 Trigger**: Audit logging
 
 ## 📖 Documentation
 
@@ -58,6 +58,7 @@ See `PROJECT_DOCUMENTATION/README.md` for details.
 - Admin dashboard with analytics
 - Doctor appointment management
 - Patient booking system
+- Hospital management
 - JWT authentication
 - Role-based access control
 
