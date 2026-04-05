@@ -1,8 +1,4 @@
--- ============================================
 -- DOCAPPOINTER - 3 SQL FUNCTIONS
--- ============================================
-
--- ============================================
 -- FUNCTION 1: Get Doctor Appointment Count
 -- ============================================
 CREATE OR REPLACE FUNCTION fn_get_doctor_appointment_count(

@@ -13,6 +13,8 @@ const bedController = require('../controllers/bedController');
 const labTestController = require('../controllers/labTestController');
 const medicineController = require('../controllers/medicineController');
 const databaseFeaturesController = require('../controllers/databaseFeaturesController');
+router.get('/lab-tests', labTestController.getAllLabTests);
+router.get('/medical-technicians', medicalTechnicianController.getAllTechnicians);
 
 // Apply authentication middleware to all admin routes
 router.use(authenticateToken);
@@ -31,7 +33,7 @@ router.put('/hospital-branches/:id', hospitalBranchesController.updateBranch);
 router.delete('/hospital-branches/:id', hospitalBranchesController.deleteBranch);
 
 // Medical Technician Routes
-router.get('/medical-technicians', medicalTechnicianController.getAllTechnicians);
+
 router.post('/medical-technicians', medicalTechnicianController.addTechnician);
 router.put('/medical-technicians/:id', medicalTechnicianController.updateTechnician);
 router.delete('/medical-technicians/:id', medicalTechnicianController.deleteTechnician);
@@ -68,7 +70,7 @@ router.post('/beds', bedController.addBed);
 router.put('/beds/:id', bedController.updateBed);
 router.delete('/beds/:id', bedController.deleteBed);
 
-router.get('/lab-tests', labTestController.getAllLabTests);
+
 router.post('/lab-tests', labTestController.addLabTest);
 router.put('/lab-tests/:id', labTestController.updateLabTest);
 router.delete('/lab-tests/:id', labTestController.deleteLabTest);
